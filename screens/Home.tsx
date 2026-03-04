@@ -47,8 +47,8 @@ const Home: React.FC = () => {
         <div className="container mx-auto max-w-7xl px-4 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 border-b border-slate-50 pb-8">
             {[
-              { label: 'Anonymous Limit', value: '60 req/min' },
-              { label: 'GitHub Login', value: '200 req/min' },
+              { label: 'Anonymous Limit', value: '10 req/min' },
+              { label: 'GitHub Login', value: '30 req/min' },
               { label: 'Credit Card', value: 'Not required' },
               { label: 'API Latency', value: '< 200ms' },
             ].map((stat, i) => (
@@ -175,9 +175,9 @@ const Home: React.FC = () => {
         <div className="container mx-auto px-4 text-center max-w-3xl">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Start free. Unlock more with GitHub login.</h2>
           <p className="text-slate-400 text-lg mb-8">
-            Anonymous access gives instant API calls at 60 req/min.
+            Anonymous access gives instant API calls at 10 req/min.
             <br />
-            Sign in with GitHub for 200 req/min, dashboard access, and usage tracking.
+            Sign in with GitHub for 30 req/min, dashboard access, and usage tracking.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="/data/openai.com">

@@ -30,7 +30,7 @@ export default async function DashboardPage() {
             Welcome back, {session.name ?? session.login}
           </h1>
           <p className="mt-2 text-slate-600">
-            Plan: <span className="font-semibold capitalize">{session.plan}</span> (200 req/min)
+            Plan: <span className="font-semibold capitalize">{session.plan}</span> (30 req/min)
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <a href="/playground">
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
             </div>
             <h2 className="text-lg font-semibold text-slate-900">Rate Limit Status</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Current entitlement: <span className="font-medium">200 req/min</span>.
+              Current entitlement: <span className="font-medium">30 req/min</span>.
             </p>
           </section>
         </div>

@@ -102,7 +102,7 @@ export const HeroSection: React.FC = () => {
             </h1>
 
             <p className="text-lg text-ink-600 max-w-xl leading-relaxed">
-              Start instantly with Anonymous access at 60 req/min. Sign in with GitHub to unlock 200 req/min, free API
+              Start instantly with Anonymous access at 10 req/min. Sign in with GitHub to unlock 30 req/min, free API
               key management, a personal dashboard, and usage tracking.
             </p>
 
@@ -135,9 +135,9 @@ export const HeroSection: React.FC = () => {
                   No credit card required
                 </span>
                 <span className="hidden sm:inline text-ink-300">•</span>
-                <span>Anonymous: 60 req/min</span>
+                <span>Anonymous: 10 req/min</span>
                 <span className="hidden sm:inline text-ink-300">•</span>
-                <span>GitHub Free: 200 req/min + dashboard</span>
+                <span>GitHub Free: 30 req/min + dashboard</span>
               </div>
             </div>
 

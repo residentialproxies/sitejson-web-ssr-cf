@@ -22,7 +22,7 @@ const plans: PricingPlan[] = [
     ctaHref: '/data/openai.com',
     ctaVariant: 'outline',
     features: [
-      '60 req/min rate limit',
+      '10 req/min rate limit',
       'IP geolocation data',
       'ASN and organization info',
       'Risk scoring with explanations',
@@ -39,7 +39,7 @@ const plans: PricingPlan[] = [
     ctaHref: '/api/auth/github/start',
     ctaVariant: 'clay',
     features: [
-      '200 req/min rate limit',
+      '30 req/min rate limit',
       'Personal dashboard',
       'API key management',
       'Per-key usage tracking',
@@ -55,7 +55,7 @@ const plans: PricingPlan[] = [
     ctaHref: 'mailto:hello@sitejson.com?subject=SiteJSON%20Pro%20Waitlist',
     ctaVariant: 'outline',
     features: [
-      '600 req/min',
+      '100 req/min',
       'Guaranteed throughput',
       'Priority support',
       '99.9% uptime SLA',
@@ -80,7 +80,7 @@ export const PricingSection: React.FC = () => {
             Start free. Upgrade with GitHub login.
           </h2>
           <p className="text-lg leading-relaxed text-ink-600">
-            Start free with 60 req/min. Sign in with GitHub to unlock 200 req/min, a dashboard, and usage
+            Start free with 10 req/min. Sign in with GitHub to unlock 30 req/min, a dashboard, and usage
             tracking. No credit card required.
           </p>
           <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-2">

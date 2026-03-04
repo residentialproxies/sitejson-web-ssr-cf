@@ -28,9 +28,9 @@ const WINDOW_MS = 60_000;
 const CLEANUP_INTERVAL = 120_000;
 const VALID_PLAN_TIERS = new Set<PlanTier>(['anonymous', 'github', 'pro']);
 const DEFAULT_LIMITS: Record<PlanTier, number> = {
-  anonymous: 60,
-  github: 200,
-  pro: 600,
+  anonymous: 10,
+  github: 30,
+  pro: 100,
 };
 
 let lastCleanup = Date.now();
