@@ -29,12 +29,12 @@ type GitHubEmailResponse = Array<{
 }>;
 
 const getBaseUrl = (request: Request): string => {
-  const url = new URL(request.url);
-  const forwardedProto = request.headers.get('x-forwarded-proto');
-  const forwardedHost = request.headers.get('x-forwarded-host');
-  const proto = forwardedProto ?? url.protocol.replace(':', '');
-  const host = forwardedHost ?? request.headers.get('host') ?? url.host;
-  return `${proto}://${host}`;
+  const configured = process.env.PUBLIC_SITE_BASE_URL?.trim();
+  if (configured) {
+    return configured.replace(/\/+$/, '');
+  }
+
+  return new URL(request.url).origin;
 };
 
 const getCookieValue = (cookieHeader: string, name: string): string | null => {
