@@ -19,6 +19,7 @@ import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/component
 import { getSiteReport } from '@/lib/api-client/client';
 import { cn } from '@/lib/utils';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
+import { ReportEmptyState } from '../report-empty-state';
 
 export const runtime = 'edge';
 
@@ -82,7 +83,7 @@ function getDomainFromUrl(url: string): string {
 export default async function SeoPage({ params }: SeoPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
-  if (!result) return null;
+  if (!result) return <ReportEmptyState domain={domain} section="SEO" />;
 
   const { report } = result;
   const seo = report.seo;
@@ -172,7 +173,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
       {/* Heading & Links */}
       {seo && (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <DataCard title="Heading Structure" icon={Heading1}>
+          <DataCard title="Heading Structure" icon={<Heading1 className="w-4 h-4 text-gray-500" />}>
             <DataRow
               label="H1 Tags"
               value={
@@ -185,7 +186,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
             <DataRow label="Images" value={seo.imagesCount ?? 0} />
           </DataCard>
 
-          <DataCard title="Link Analysis" icon={LinkIcon}>
+          <DataCard title="Link Analysis" icon={<LinkIcon className="w-4 h-4 text-gray-500" />}>
             <DataRow label="Internal Links" value={seo.internalLinks ?? 0} />
             <DataRow label="External Links" value={seo.externalLinks ?? 0} />
             {(seo.internalLinks ?? 0) + (seo.externalLinks ?? 0) > 0 && (
@@ -207,7 +208,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {contacts.emails && contacts.emails.length > 0 && (
-              <DataCard title="Email Addresses" icon={Mail}>
+              <DataCard title="Email Addresses" icon={<Mail className="w-4 h-4 text-gray-500" />}>
                 {contacts.emails.map((email) => (
                   <div key={email} className="py-2 border-b border-gray-100 last:border-0">
                     <a
@@ -222,7 +223,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
             )}
 
             {contacts.phones && contacts.phones.length > 0 && (
-              <DataCard title="Phone Numbers" icon={Phone}>
+              <DataCard title="Phone Numbers" icon={<Phone className="w-4 h-4 text-gray-500" />}>
                 {contacts.phones.map((phone) => (
                   <div key={phone} className="py-2 border-b border-gray-100 last:border-0">
                     <a
@@ -237,7 +238,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
             )}
 
             {contacts.socialLinks && contacts.socialLinks.length > 0 && (
-              <DataCard title="Social Links" icon={Globe}>
+              <DataCard title="Social Links" icon={<Globe className="w-4 h-4 text-gray-500" />}>
                 {contacts.socialLinks.map((url) => (
                   <div key={url} className="py-2 border-b border-gray-100 last:border-0">
                     <a
@@ -335,9 +336,9 @@ export default async function SeoPage({ params }: SeoPageProps) {
             AI Classification
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DataCard title="Content Analysis" icon={Bot}>
-              {ai.classification?.category && (
-                <DataRow label="Category" value={ai.classification.category} />
+            <DataCard title="Content Analysis" icon={<Bot className="w-4 h-4 text-gray-500" />}>
+              {taxonomy?.iabCategory && (
+                <DataRow label="Category" value={taxonomy.iabCategory} />
               )}
               {ai.business?.model && (
                 <DataRow label="Business Model" value={ai.business.model} />
@@ -353,10 +354,10 @@ export default async function SeoPage({ params }: SeoPageProps) {
               )}
             </DataCard>
 
-            {ai.classification?.tags && ai.classification.tags.length > 0 && (
+            {taxonomy?.tags && taxonomy.tags.length > 0 && (
               <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
                 <h3 className="text-sm font-medium text-gray-900 mb-3">AI-Generated Tags</h3>
-                <TagList tags={ai.classification.tags} />
+                <TagList tags={taxonomy.tags} />
               </div>
             )}
           </div>

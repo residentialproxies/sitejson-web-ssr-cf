@@ -1,5 +1,9 @@
 import Home from '../screens/Home';
 
 export default function HomePage() {
-  return <Home />;
+  return (
+    <main>
+      <Home />
+    </main>
+  );
 }

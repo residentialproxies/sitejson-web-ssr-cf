@@ -1,11 +1,11 @@
-import { proxyToSitejson } from '../_lib';
+import { rateLimitedProxy } from '../_lib';
 
 export const runtime = 'edge';
 
 export async function POST(request: Request) {
   const body = await request.text();
 
-  return proxyToSitejson('/api/v1/sites/analyze', {
+  return rateLimitedProxy(request, '/api/v1/analyze', {
     method: 'POST',
     body,
     headers: {

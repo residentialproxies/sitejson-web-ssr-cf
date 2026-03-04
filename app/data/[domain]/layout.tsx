@@ -5,6 +5,12 @@ import { DomainHeader } from '@/components/domain/header';
 import { NavTabs } from '@/components/domain/nav-tabs';
 import { getSiteReport } from '@/lib/api-client/client';
 import { buildReportMetadata } from '@/lib/seo/metadata';
+import {
+  generateWebPageJsonLd,
+  generateBreadcrumbJsonLd,
+  generateDatasetJsonLd,
+  combineJsonLd,
+} from '@/lib/seo/json-ld';
 import { Button } from '@/components/ui/Button';
 
 export const runtime = 'edge';
@@ -50,20 +56,28 @@ export default async function DomainLayout({ children, params }: DomainLayoutPro
     );
   }
 
+  // Generate structured data for the domain report
+  const webPageSchema = generateWebPageJsonLd(
+    `${domain} Website Intelligence Report`,
+    `Comprehensive analysis of ${domain} including SEO metrics, traffic data, technology stack, and trust signals.`,
+    `/data/${domain}`,
+    result.updatedAt
+  );
+
+  const breadcrumbSchema = generateBreadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: domain, path: `/data/${domain}` },
+  ]);
+
+  const datasetSchema = generateDatasetJsonLd(domain, result.report);
+
+  const jsonLd = combineJsonLd([webPageSchema, breadcrumbSchema, datasetSchema]);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            '@context': 'https://schema.org',
-            '@type': 'BreadcrumbList',
-            itemListElement: [
-              { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://sitejson.com' },
-              { '@type': 'ListItem', position: 2, name: domain, item: `https://sitejson.com/data/${domain}` },
-            ],
-          }),
-        }}
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
       />
       <div className="max-w-7xl mx-auto px-4 py-6 space-y-4">
         <DomainHeader

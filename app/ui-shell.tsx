@@ -1,7 +1,5 @@
-"use client";
-
 import React from 'react';
-import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { Navbar } from '../components/layout/Navbar';
 
 type UiShellProps = {
@@ -9,12 +7,6 @@ type UiShellProps = {
 };
 
 export const UiShell = ({ children }: UiShellProps) => {
-  const pathname = usePathname();
-
-  React.useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-950">
       <Navbar />
@@ -33,8 +25,8 @@ export const UiShell = ({ children }: UiShellProps) => {
             <div>
               <h4 className="font-bold text-slate-900 mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-slate-500">
-                <li><a href="/directory/category/technology" className="hover:text-slate-900">Directory</a></li>
-                <li><a href="/directory/technology/react" className="hover:text-slate-900">Tech Stack Index</a></li>
+                <li><Link href="/directory/category/technology" className="hover:text-slate-900">Directory</Link></li>
+                <li><Link href="/directory/technology/react" className="hover:text-slate-900">Tech Stack Index</Link></li>
               </ul>
             </div>
             <div>
@@ -45,7 +37,7 @@ export const UiShell = ({ children }: UiShellProps) => {
             </div>
           </div>
           <div className="pt-8 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-slate-500 text-center md:text-left">
+            <p className="text-xs text-slate-500 text-center md:text-left" suppressHydrationWarning>
               &copy; {new Date().getFullYear()} SiteJSON. All rights reserved.
             </p>
           </div>

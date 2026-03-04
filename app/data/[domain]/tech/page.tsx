@@ -16,6 +16,7 @@ import { DataCard, DataRow, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
 import { cn } from '@/lib/utils';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
+import { ReportEmptyState } from '../report-empty-state';
 
 export const runtime = 'edge';
 
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: TechPageProps): Promise<Metad
 export default async function TechPage({ params }: TechPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
-  if (!result) return null;
+  if (!result) return <ReportEmptyState domain={domain} section="technology" />;
 
   const { report } = result;
   const techStack = report.meta?.techStackDetected ?? [];
@@ -68,12 +69,12 @@ export default async function TechPage({ params }: TechPageProps) {
             Infrastructure
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <DataCard title="DNS Provider" icon={Globe}>
+            <DataCard title="DNS Provider" icon={<Globe className="w-4 h-4 text-gray-500" />}>
               <DataRow label="Provider" value={dns.provider ?? 'Unknown'} />
             </DataCard>
 
             {dns.mxRecords && dns.mxRecords.length > 0 && (
-              <DataCard title="Mail Exchange" icon={Mail}>
+              <DataCard title="Mail Exchange" icon={<Mail className="w-4 h-4 text-gray-500" />}>
                 {dns.mxRecords.map((mx, i) => (
                   <DataRow key={i} label={`MX ${i + 1}`} value={mx} mono />
                 ))}
@@ -81,7 +82,7 @@ export default async function TechPage({ params }: TechPageProps) {
             )}
 
             {dns.nsRecords && dns.nsRecords.length > 0 && (
-              <DataCard title="NS Records" icon={Shield}>
+              <DataCard title="NS Records" icon={<Shield className="w-4 h-4 text-gray-500" />}>
                 {dns.nsRecords.map((ns, i) => (
                   <DataRow key={i} label={`NS ${i + 1}`} value={ns} mono />
                 ))}
@@ -89,7 +90,7 @@ export default async function TechPage({ params }: TechPageProps) {
             )}
 
             {dns.txtRecords && dns.txtRecords.length > 0 && (
-              <DataCard title="TXT Records" icon={FileText}>
+              <DataCard title="TXT Records" icon={<FileText className="w-4 h-4 text-gray-500" />}>
                 {dns.txtRecords.map((txt, i) => (
                   <div key={i} className="py-2 border-b border-gray-100 last:border-0">
                     <p className="text-xs font-mono break-all text-gray-700">{txt}</p>
@@ -193,7 +194,7 @@ export default async function TechPage({ params }: TechPageProps) {
       {/* HTML Source Info */}
       {html && (
         <section>
-          <DataCard title="HTML Source Info" icon={Code}>
+          <DataCard title="HTML Source Info" icon={<Code className="w-4 h-4 text-gray-500" />}>
             {html.source && (
               <DataRow label="Source Method" value={html.source} />
             )}

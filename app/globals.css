@@ -1,26 +1,491 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #ffffff;
-  color: #020817;
+/*
+ * SiteJSON Design System
+ * Distinctive aesthetic with warm, sophisticated palette
+ * Primary: Warm Coral/Clay (#D97757) - distinctive, memorable, professional
+ * Secondary: Deep Ink (#1A1A2E) - authoritative, premium
+ * Accent: Sage/Olive (#8B9A6D) - growth, trust, nature
+ */
+
+/* Font Loading - Newsreader (editorial serif) + IBM Plex Sans (modern grotesque) */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/newsreader/v20/cY9qfjOCX1hbuy1qYC0E6Zpt-g0.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* Custom Scrollbar */
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/newsreader/v20/cY9qfjOCX1hbuy1qYC0E6Zpt-g0.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Newsreader';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/newsreader/v20/cY9qfjOCX1hbuy1qYC0E6Zpt-g0.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexsans/v19/zYXgKVElMYYaJe8bpLHnCwDKhdHeEw.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexsans/v19/zYX9KVElMYYaJe8bpLHnCwDKjSL9AIFsdA.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexsans/v19/zYX9KVElMYYaJe8bpLHnCwDKjQ76AIFsdA.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexsans/v19/zYX9KVElMYYaJe8bpLHnCwDKjWr7AIFsdA.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexmono/v19/-F63fjptAgt5VM-kVkqdyU8n1i8q131nj-o.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/ibmplexmono/v19/-F6qfjptAgt5VM-kVkqdyU8n3twJwl1FgsAXHNk.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@layer base {
+  :root {
+    /* Core Color System - Warm, Distinctive Palette */
+    --clay-50: #FDF8F6;
+    --clay-100: #F9EBE6;
+    --clay-200: #F2D5CC;
+    --clay-300: #E8B8A8;
+    --clay-400: #D97757;
+    --clay-500: #C45E3D;
+    --clay-600: #A84B2F;
+    --clay-700: #8B3D28;
+    --clay-800: #723325;
+    --clay-900: #5F2D22;
+
+    --ink-50: #F4F4F7;
+    --ink-100: #E8E8ED;
+    --ink-200: #D0D0DB;
+    --ink-300: #A9A9BC;
+    --ink-400: #7A7A95;
+    --ink-500: #5A5A78;
+    --ink-600: #474760;
+    --ink-700: #3B3B4F;
+    --ink-800: #323244;
+    --ink-900: #1A1A2E;
+    --ink-950: #0F0F1A;
+
+    --sage-50: #F6F7F4;
+    --sage-100: #E8EBE3;
+    --sage-200: #D1D7C7;
+    --sage-300: #B0BAA0;
+    --sage-400: #8B9A6D;
+    --sage-500: #6B7A4F;
+    --sage-600: #52613B;
+    --sage-700: #414D30;
+    --sage-800: #363F29;
+    --sage-900: #2D3524;
+
+    --ochre-50: #FDF9F3;
+    --ochre-100: #F9EFDC;
+    --ochre-200: #F2DEB8;
+    --ochre-300: #EAC68A;
+    --ochre-400: #DFA854;
+    --ochre-500: #D48C2E;
+    --ochre-600: #C67624;
+    --ochre-700: #A55D1F;
+    --ochre-800: #854A1F;
+    --ochre-900: #6D3D1B;
+
+    /* Semantic Colors */
+    --background: var(--clay-50);
+    --foreground: var(--ink-900);
+    --card: #FFFFFF;
+    --card-foreground: var(--ink-900);
+    --popover: #FFFFFF;
+    --popover-foreground: var(--ink-900);
+    --primary: var(--clay-500);
+    --primary-foreground: #FFFFFF;
+    --secondary: var(--ink-100);
+    --secondary-foreground: var(--ink-800);
+    --muted: var(--clay-100);
+    --muted-foreground: var(--ink-400);
+    --accent: var(--sage-400);
+    --accent-foreground: #FFFFFF;
+    --destructive: #C9372D;
+    --destructive-foreground: #FFFFFF;
+    --border: var(--ink-200);
+    --input: var(--ink-200);
+    --ring: var(--clay-400);
+    --radius: 0.75rem;
+
+    /* Typography Scale - Fluid */
+    --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --text-sm: clamp(0.875rem, 0.825rem + 0.25vw, 1rem);
+    --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --text-lg: clamp(1.125rem, 1.05rem + 0.375vw, 1.375rem);
+    --text-xl: clamp(1.25rem, 1.125rem + 0.625vw, 1.75rem);
+    --text-2xl: clamp(1.5rem, 1.35rem + 0.75vw, 2.25rem);
+    --text-3xl: clamp(1.875rem, 1.65rem + 1.125vw, 3rem);
+    --text-4xl: clamp(2.25rem, 1.95rem + 1.5vw, 4rem);
+    --text-5xl: clamp(3rem, 2.5rem + 2.5vw, 5.5rem);
+
+    /* Spacing */
+    --space-1: clamp(0.25rem, 0.2rem + 0.25vw, 0.5rem);
+    --space-2: clamp(0.5rem, 0.4rem + 0.5vw, 1rem);
+    --space-3: clamp(0.75rem, 0.65rem + 0.5vw, 1.25rem);
+    --space-4: clamp(1rem, 0.85rem + 0.75vw, 1.75rem);
+    --space-5: clamp(1.5rem, 1.25rem + 1.25vw, 2.75rem);
+    --space-6: clamp(2rem, 1.65rem + 1.75vw, 3.5rem);
+    --space-8: clamp(3rem, 2.5rem + 2.5vw, 5rem);
+    --space-10: clamp(4rem, 3.25rem + 3.75vw, 7rem);
+
+    /* Shadows - Warm, organic */
+    --shadow-sm: 0 1px 2px 0 rgb(26 26 46 / 0.05);
+    --shadow: 0 1px 3px 0 rgb(26 26 46 / 0.1), 0 1px 2px -1px rgb(26 26 46 / 0.1);
+    --shadow-md: 0 4px 6px -1px rgb(26 26 46 / 0.1), 0 2px 4px -2px rgb(26 26 46 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(26 26 46 / 0.1), 0 4px 6px -4px rgb(26 26 46 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(26 26 46 / 0.1), 0 8px 10px -6px rgb(26 26 46 / 0.1);
+    --shadow-glow: 0 0 40px -10px var(--clay-300);
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * {
+    @apply border-[var(--border)];
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+    background-color: var(--background);
+    color: var(--foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Editorial Typography */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  h1 {
+    font-size: var(--text-5xl);
+  }
+
+  h2 {
+    font-size: var(--text-4xl);
+  }
+
+  h3 {
+    font-size: var(--text-3xl);
+  }
+
+  h4 {
+    font-size: var(--text-2xl);
+  }
+
+  h5 {
+    font-size: var(--text-xl);
+  }
+
+  h6 {
+    font-size: var(--text-lg);
+  }
+
+  p, li {
+    font-size: var(--text-base);
+    line-height: 1.7;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'IBM Plex Mono', 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    font-size: 0.9em;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: var(--clay-200);
+    color: var(--ink-900);
+  }
+}
+
+@layer components {
+  /* Noise Texture Overlay */
+  .noise-overlay {
+    position: relative;
+  }
+
+  .noise-overlay::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    opacity: 0.03;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* Gradient Mesh Background */
+  .gradient-mesh {
+    background:
+      radial-gradient(ellipse 80% 50% at 20% 40%, var(--clay-100) 0%, transparent 50%),
+      radial-gradient(ellipse 60% 40% at 80% 60%, var(--sage-100) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 30% at 50% 80%, var(--ochre-100) 0%, transparent 50%),
+      var(--background);
+  }
+
+  /* Aurora Background */
+  .aurora-bg {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .aurora-bg::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background:
+      radial-gradient(ellipse at 30% 20%, var(--clay-200) 0%, transparent 50%),
+      radial-gradient(ellipse at 70% 60%, var(--sage-200) 0%, transparent 40%),
+      radial-gradient(ellipse at 40% 80%, var(--ochre-200) 0%, transparent 45%);
+    animation: aurora 20s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  @keyframes aurora {
+    0%, 100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    33% {
+      transform: translate(2%, 2%) rotate(2deg);
+    }
+    66% {
+      transform: translate(-1%, 1%) rotate(-1deg);
+    }
+  }
+
+  /* Floating Elements */
+  .float-slow {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .float-medium {
+    animation: float 4s ease-in-out infinite;
+  }
+
+  .float-fast {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
+  /* Card Hover Lift */
+  .card-lift {
+    transition: transform var(--transition-spring), box-shadow var(--transition-base);
+  }
+
+  .card-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* Text Gradient */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--clay-500) 0%, var(--ochre-500) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Button Shimmer */
+  .btn-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    transition: left 0.5s ease;
+  }
+
+  .btn-shimmer:hover::after {
+    left: 100%;
+  }
+
+  /* Glass Effect */
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  /* Scroll Reveal */
+  .reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity var(--transition-slow), transform var(--transition-slow);
+  }
+
+  .reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Stagger Children */
+  .stagger-children > * {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .stagger-children.visible > *:nth-child(1) { animation: staggerIn 0.5s ease forwards 0.1s; }
+  .stagger-children.visible > *:nth-child(2) { animation: staggerIn 0.5s ease forwards 0.2s; }
+  .stagger-children.visible > *:nth-child(3) { animation: staggerIn 0.5s ease forwards 0.3s; }
+  .stagger-children.visible > *:nth-child(4) { animation: staggerIn 0.5s ease forwards 0.4s; }
+  .stagger-children.visible > *:nth-child(5) { animation: staggerIn 0.5s ease forwards 0.5s; }
+  .stagger-children.visible > *:nth-child(6) { animation: staggerIn 0.5s ease forwards 0.6s; }
+
+  @keyframes staggerIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer utilities {
+  /* Custom Scrollbar */
+  .scrollbar-custom::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-track {
+    background: var(--ink-100);
+    border-radius: 3px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb {
+    background: var(--ink-300);
+    border-radius: 3px;
+  }
+
+  .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+    background: var(--ink-400);
+  }
+
+  /* Focus Ring */
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2;
+  }
+
+  /* Line Clamp */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Global Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--ink-100);
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--ink-300);
   border-radius: 4px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: var(--ink-400);
 }

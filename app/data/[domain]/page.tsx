@@ -4,13 +4,10 @@ import {
   Search,
   Server,
   BarChart3,
-  Tag,
   FileText,
   Bot,
-  Shield,
   Mail,
   Phone,
-  Link,
   Megaphone,
   DollarSign,
   Palette,
@@ -20,7 +17,7 @@ import {
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
 import { formatNumber, formatDuration } from '@/lib/utils';
-import type { SiteReport } from '@/lib/api-client/types';
+import { ReportEmptyState } from './report-empty-state';
 
 export const runtime = 'edge';
 
@@ -33,7 +30,7 @@ type OverviewPageProps = {
 export default async function OverviewPage({ params }: OverviewPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
-  if (!result) return null;
+  if (!result) return <ReportEmptyState domain={domain} section="overview" />;
 
   const { report } = result;
   const seo = report.seo;
@@ -53,7 +50,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* SEO Card */}
       {seo && (
-        <DataCard title="SEO Overview" icon={Search}>
+        <DataCard title="SEO Overview" icon={<Search className="w-4 h-4 text-gray-500" />}>
           {score?.value != null && (
             <DataRow label="Site Score" value={<ScoreBadge score={score.value} />} />
           )}
@@ -67,7 +64,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Contacts Card */}
       {contacts && (contacts.emails?.length || contacts.phones?.length || contacts.socialLinks?.length) && (
-        <DataCard title="Contacts" icon={Mail}>
+        <DataCard title="Contacts" icon={<Mail className="w-4 h-4 text-gray-500" />}>
           {contacts.emails && contacts.emails.length > 0 && (
             <div className="py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
@@ -117,7 +114,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* DNS Card */}
       {dns && (
-        <DataCard title="DNS & Infrastructure" icon={Server}>
+        <DataCard title="DNS & Infrastructure" icon={<Server className="w-4 h-4 text-gray-500" />}>
           <DataRow label="DNS Provider" value={dns.provider ?? 'Unknown'} />
           {dns.mxRecords && dns.mxRecords.length > 0 && (
             <>
@@ -137,7 +134,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Traffic Card */}
       {traffic && (
-        <DataCard title="Traffic Stats" icon={BarChart3}>
+        <DataCard title="Traffic Stats" icon={<BarChart3 className="w-4 h-4 text-gray-500" />}>
           {traffic.monthlyVisits != null && (
             <DataRow label="Monthly Visits" value={formatNumber(traffic.monthlyVisits)} />
           )}
@@ -165,22 +162,9 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
         </DataCard>
       )}
 
-      {/* Classification Card */}
-      {ai?.classification && (
-        <DataCard title="Category" icon={Tag}>
-          <DataRow label="IAB Category" value={ai.classification.category ?? 'N/A'} />
-          <DataRow label="Sub-Category" value={ai.classification.subCategory ?? 'N/A'} />
-          {ai.classification.tags && ai.classification.tags.length > 0 && (
-            <div className="pt-2">
-              <TagList tags={ai.classification.tags} />
-            </div>
-          )}
-        </DataCard>
-      )}
-
       {/* Taxonomy Card */}
       {taxonomy && (
-        <DataCard title="Taxonomy" icon={BookOpen}>
+        <DataCard title="Taxonomy" icon={<BookOpen className="w-4 h-4 text-gray-500" />}>
           {taxonomy.iabCategory && (
             <DataRow label="IAB Category" value={taxonomy.iabCategory} />
           )}
@@ -188,7 +172,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
             <DataRow label="IAB Sub-Category" value={taxonomy.iabSubCategory} />
           )}
           {taxonomy.confidence != null && (
-            <DataRow label="Confidence" value={`${taxonomy.confidence}%`} />
+            <DataRow label="Confidence" value={`${Math.round(taxonomy.confidence * 100)}%`} />
           )}
           {taxonomy.source && (
             <DataRow label="Source" value={taxonomy.source} mono />
@@ -203,7 +187,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Technical Files */}
       {files && (
-        <DataCard title="Technical Files" icon={FileText}>
+        <DataCard title="Technical Files" icon={<FileText className="w-4 h-4 text-gray-500" />}>
           <DataRow
             label="robots.txt"
             value={
@@ -229,7 +213,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* AI Analysis */}
       {ai && (
-        <DataCard title="AI Analysis" icon={Bot}>
+        <DataCard title="AI Analysis" icon={<Bot className="w-4 h-4 text-gray-500" />}>
           {ai.business?.summary && (
             <DataRow label="Summary" value={ai.business.summary} />
           )}
@@ -259,7 +243,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Score Signals */}
       {score?.signals && score.signals.length > 0 && (
-        <DataCard title="Score Signals" icon={Zap}>
+        <DataCard title="Score Signals" icon={<Zap className="w-4 h-4 text-gray-500" />}>
           {score.value != null && (
             <DataRow label="Overall Score" value={<ScoreBadge score={score.value} />} />
           )}
@@ -271,7 +255,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Advertising Card */}
       {ads && (
-        <DataCard title="Advertising" icon={Megaphone}>
+        <DataCard title="Advertising" icon={<Megaphone className="w-4 h-4 text-gray-500" />}>
           <DataRow
             label="Is Advertiser"
             value={
@@ -301,7 +285,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Publisher / Monetization Card */}
       {publisher && (
-        <DataCard title="Publisher / Monetization" icon={DollarSign}>
+        <DataCard title="Publisher / Monetization" icon={<DollarSign className="w-4 h-4 text-gray-500" />}>
           <DataRow
             label="ads.txt"
             value={
@@ -329,7 +313,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
 
       {/* Visual / Brand Card */}
       {visual && (visual.dominantColor || (visual.palette && visual.palette.length > 0)) && (
-        <DataCard title="Visual / Brand" icon={Palette}>
+        <DataCard title="Visual / Brand" icon={<Palette className="w-4 h-4 text-gray-500" />}>
           {visual.dominantColor && (
             <DataRow
               label="Dominant Color"

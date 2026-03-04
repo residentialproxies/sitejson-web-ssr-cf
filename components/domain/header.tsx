@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Globe, ExternalLink, Clock, RefreshCw } from 'lucide-react';
-import { cn, getRelativeTime } from '@/lib/utils';
+import Image from 'next/image';
+import { ExternalLink, Clock, RefreshCw } from 'lucide-react';
+import { cn, getRelativeTime, getScreenshotUrl, getFaviconUrl, generateBlurPlaceholder } from '@/lib/utils';
 import type { SiteReport } from '@/lib/api-client/types';
 
 interface DomainHeaderProps {
@@ -14,8 +15,10 @@ interface DomainHeaderProps {
 }
 
 export function DomainHeader({ domain, report, updatedAt, isStale, className }: DomainHeaderProps) {
-  const screenshotUrl = `https://image.thum.io/get/width/1280/crop/800/https://${domain}`;
+  const screenshotUrl = getScreenshotUrl(domain, 'large', { format: 'webp', quality: 85 });
+  const faviconUrl = getFaviconUrl(domain, 32);
   const techStack = report.meta?.techStackDetected ?? [];
+  const blurPlaceholder = generateBlurPlaceholder(1280, 800);
 
   return (
     <div className={cn('bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden', className)}>
@@ -23,10 +26,16 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
         {/* Screenshot */}
         <div className="md:w-80 lg:w-96 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
           <div className="relative aspect-[16/10] bg-gray-100">
-            <img
+            <Image
               src={screenshotUrl}
               alt={`Screenshot of ${domain}`}
-              className="w-full h-full object-cover object-top"
+              fill
+              sizes="(max-width: 768px) 100vw, 384px"
+              className="object-cover object-top"
+              placeholder="blur"
+              blurDataURL={blurPlaceholder}
+              priority
+              unoptimized={screenshotUrl.includes('thum.io')}
             />
           </div>
         </div>
@@ -36,10 +45,13 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <img
-                  src={`https://www.google.com/s2/favicons?domain=${domain}&sz=32`}
+                <Image
+                  src={faviconUrl}
                   alt=""
+                  width={20}
+                  height={20}
                   className="w-5 h-5 rounded-sm"
+                  unoptimized
                 />
                 <h1 className="text-xl font-semibold text-gray-900 truncate">{domain}</h1>
                 <a

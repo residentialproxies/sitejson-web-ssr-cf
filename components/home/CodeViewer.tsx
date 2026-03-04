@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, Copy, Terminal } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { Check, Copy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 interface CodeViewerProps {
@@ -10,18 +10,19 @@ interface CodeViewerProps {
 }
 
 export const CodeViewer: React.FC<CodeViewerProps> = ({ domain }) => {
-  const [activeTab, setActiveTab] = useState<'json' | 'curl' | 'node' | 'python'>('json');
+  const [activeTab, setActiveTab] = useState<'json' | 'curl' | 'node'>('json');
   const [copied, setCopied] = useState(false);
   const safeDomain = domain || 'example.com';
+  const prefersReducedMotion = useReducedMotion();
 
   const handleCopy = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const jsonResponse = {
+  const jsonResponse = useMemo(() => ({
     domain: safeDomain,
-    updated_at: new Date().toISOString().split('T')[0] + "T10:42:00Z",
+    updated_at: "2025-01-15T10:42:00Z",
     radar: {
       global_rank: 854,
       rank_bucket: "Top 1k"
@@ -45,7 +46,7 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ domain }) => {
     meta: {
       tech_stack_detected: ["Next.js", "React"]
     }
-  };
+  }), [safeDomain]);
 
   const getCode = () => {
     switch (activeTab) {
@@ -58,12 +59,6 @@ export const CodeViewer: React.FC<CodeViewerProps> = ({ domain }) => {
 const client = new SiteJson('sk_live_...');
 const data = await client.get('${safeDomain}');
 console.log(data.radar.global_rank);`;
-      case 'python':
-        return `import sitejson
-
-client = sitejson.Client('sk_live_...')
-data = client.get('${safeDomain}')
-print(data.radar.global_rank)`;
       default:
         return JSON.stringify(jsonResponse, null, 2);
     }
@@ -108,13 +103,13 @@ print(data.radar.global_rank)`;
 
       {/* Code Area */}
       <div className="flex-1 p-6 overflow-auto custom-scrollbar relative">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={!prefersReducedMotion}>
           <motion.div
             key={activeTab + domain}
-            initial={{ opacity: 0 }}
+            initial={prefersReducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={prefersReducedMotion ? undefined : { opacity: 0 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
             className="absolute inset-0 p-6"
           >
             <pre className="leading-relaxed whitespace-pre-wrap break-all">
@@ -131,7 +126,7 @@ print(data.radar.global_rank)`;
   );
 };
 
-const JsonSyntaxHighlight: React.FC<{ data: any }> = ({ data }) => {
+const JsonSyntaxHighlight: React.FC<{ data: unknown }> = ({ data }) => {
   const jsonString = JSON.stringify(data, null, 2);
   
   // Simple regex parser for basic highlighting
@@ -154,9 +149,9 @@ const JsonSyntaxHighlight: React.FC<{ data: any }> = ({ data }) => {
               </span>
             )}
             {/* Add dummy comments for demo feeling */}
-            {line.includes("global_rank") && <span className="text-slate-600 ml-4 hidden md:inline">// Cloudflare Radar</span>}
-            {line.includes("monthly_visits") && <span className="text-slate-600 ml-4 hidden md:inline">// Est. Monthly</span>}
-            {line.includes("tech_stack_detected") && <span className="text-slate-600 ml-4 hidden md:inline">// Wappalyzer Core</span>}
+            {line.includes("global_rank") && <span className="text-slate-600 ml-4 hidden md:inline">{'// Cloudflare Radar'}</span>}
+            {line.includes("monthly_visits") && <span className="text-slate-600 ml-4 hidden md:inline">{'// Est. Monthly'}</span>}
+            {line.includes("tech_stack_detected") && <span className="text-slate-600 ml-4 hidden md:inline">{'// Wappalyzer Core'}</span>}
           </div>
         )
       })}

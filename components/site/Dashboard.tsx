@@ -1,4 +1,5 @@
 import React from 'react';
+import Image from 'next/image';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -35,9 +36,11 @@ export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
         </div>
         <div className="flex-1 relative bg-slate-50 group">
             <div className="aspect-video w-full h-full relative overflow-hidden">
-                <img
+                <Image
                     src={screenshotUrl}
                     alt={`Screenshot of ${data.domain}`}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-105"
                 />
             </div>
@@ -52,8 +55,8 @@ export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
                     <CardTitle className="flex items-center gap-2">
                         <Cpu className="w-4 h-4 text-purple-600" /> AI Insight
                     </CardTitle>
-                    {ai.classification?.category && (
-                      <Badge variant="outline">{ai.classification.category}</Badge>
+                    {data.taxonomy?.iabCategory && (
+                      <Badge variant="outline">{data.taxonomy.iabCategory}</Badge>
                     )}
                 </div>
             </CardHeader>
@@ -62,7 +65,7 @@ export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
                     {ai.business?.summary}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-auto">
-                    {ai.classification?.tags?.map(tag => (
+                    {data.taxonomy?.tags?.map((tag: string) => (
                         <span key={tag} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-md">
                             #{tag}
                         </span>

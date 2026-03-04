@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Server, Mail, Cpu, Zap, CheckCircle2, XCircle } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import Link from 'next/link';
+import { normalizeDirectorySlug } from '@/lib/utils';
 
 export const InfrastructureCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const dns = data.dns;
@@ -72,13 +73,24 @@ export const InfrastructureCard: React.FC<{ data: SiteReport }> = ({ data }) => 
               <Cpu size={10} /> Detected Stack
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {techStack.map((tech) => (
-                <Link key={tech} href={`/directory/technology/${tech.toLowerCase()}`}>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 hover:border-slate-400 cursor-pointer bg-white">
-                    {tech}
-                  </Badge>
-                </Link>
-              ))}
+              {techStack.map((tech) => {
+                const slug = normalizeDirectorySlug(tech);
+                if (!slug) {
+                  return (
+                    <Badge key={tech} variant="outline" className="text-[10px] px-1.5 py-0 bg-white">
+                      {tech}
+                    </Badge>
+                  );
+                }
+
+                return (
+                  <Link key={tech} href={`/directory/technology/${slug}`}>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 hover:border-slate-400 cursor-pointer bg-white">
+                      {tech}
+                    </Badge>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

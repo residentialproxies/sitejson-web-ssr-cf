@@ -40,6 +40,7 @@ export interface SiteReport {
   files?: {
     hasRobots?: boolean;
     hasSitemap?: boolean;
+    robotsSitemapUrls?: string[];
   };
 
   dns?: {
@@ -60,6 +61,8 @@ export interface SiteReport {
   publisher?: {
     hasAdsTxt?: boolean;
     adSystems?: string[];
+    directCount?: number;
+    resellerCount?: number;
     monetizationSignals?: string[];
   };
 
@@ -82,6 +85,14 @@ export interface SiteReport {
       paid: number;
     };
     domainAgeYears?: number | null;
+    whois?: {
+      registrar?: string | null;
+      createdAt?: string | null;
+      expiresAt?: string | null;
+      updatedAt?: string | null;
+      nameservers?: string[];
+      status?: string[];
+    } | null;
   };
 
   radar?: {
@@ -101,11 +112,6 @@ export interface SiteReport {
   };
 
   aiAnalysis?: {
-    classification?: {
-      category?: string;
-      subCategory?: string;
-      tags?: string[];
-    };
     business?: {
       summary?: string;
       model?: string;

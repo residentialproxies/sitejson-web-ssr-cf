@@ -15,6 +15,7 @@ import {
 import { getSiteReport } from '@/lib/api-client/client';
 import { formatBigNumber, formatDurationHMS, formatNumber } from '@/lib/utils';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
+import { ReportEmptyState } from '../report-empty-state';
 
 export const runtime = 'edge';
 
@@ -50,7 +51,7 @@ const SOURCE_LABELS: Record<string, string> = {
 export default async function TrafficPage({ params }: TrafficPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
-  if (!result) return null;
+  if (!result) return <ReportEmptyState domain={domain} section="traffic" />;
 
   const { report } = result;
   const traffic = report.trafficData;
@@ -67,35 +68,35 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard
-          icon={Globe}
+          icon={<Globe className="w-4 h-4 text-gray-500" />}
           label="Global Rank"
           value={globalRank != null ? `#${formatNumber(globalRank)}` : '—'}
           sub={radar?.rankBucket}
         />
         <MetricCard
-          icon={Hash}
+          icon={<Hash className="w-4 h-4 text-gray-500" />}
           label="Country Rank"
           value={traffic?.countryRank != null ? `#${formatNumber(traffic.countryRank)}` : '—'}
           sub={traffic?.topCountry ?? undefined}
         />
         <MetricCard
-          icon={Users}
+          icon={<Users className="w-4 h-4 text-gray-500" />}
           label="Total Visits"
           value={traffic?.monthlyVisits != null ? formatBigNumber(traffic.monthlyVisits) : '—'}
           sub="Monthly"
         />
         <MetricCard
-          icon={Clock}
+          icon={<Clock className="w-4 h-4 text-gray-500" />}
           label="Avg. Duration"
           value={traffic?.avgVisitDuration != null ? formatDurationHMS(traffic.avgVisitDuration) : '—'}
         />
         <MetricCard
-          icon={FileText}
+          icon={<FileText className="w-4 h-4 text-gray-500" />}
           label="Pages per Visit"
           value={traffic?.pagesPerVisit != null ? traffic.pagesPerVisit.toFixed(2) : '—'}
         />
         <MetricCard
-          icon={TrendingUp}
+          icon={<TrendingUp className="w-4 h-4 text-gray-500" />}
           label="Bounce Rate"
           value={traffic?.bounceRate != null ? `${traffic.bounceRate.toFixed(2)}%` : '—'}
           valueColor={traffic?.bounceRate != null
@@ -232,13 +233,13 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
 }
 
 function MetricCard({
-  icon: Icon,
+  icon,
   label,
   value,
   sub,
   valueColor,
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ReactNode;
   label: string;
   value: string;
   sub?: string;
@@ -247,7 +248,7 @@ function MetricCard({
   return (
     <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
       <div className="flex items-center gap-2 text-gray-500 mb-1.5">
-        <Icon className="w-4 h-4" />
+        {icon}
         <span className="text-xs font-medium">{label}</span>
       </div>
       <p className={`text-2xl font-semibold ${valueColor ?? 'text-gray-900'}`}>{value}</p>

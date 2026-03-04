@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { LucideIcon } from 'lucide-react';
 
 interface DataRowProps {
   label: string;
@@ -24,18 +23,18 @@ export function DataRow({ label, value, mono = false, className }: DataRowProps)
 
 interface DataCardProps {
   title: string;
-  icon?: LucideIcon;
+  icon?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
   headerAction?: React.ReactNode;
 }
 
-export function DataCard({ title, icon: Icon, children, className, headerAction }: DataCardProps) {
+export function DataCard({ title, icon, children, className, headerAction }: DataCardProps) {
   return (
     <div className={cn('bg-white border border-gray-200 rounded-lg shadow-sm', className)}>
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
-          {Icon && <Icon className="w-4 h-4 text-gray-500" />}
+          {icon}
           <h3 className="text-sm font-medium text-gray-900">{title}</h3>
         </div>
         {headerAction}

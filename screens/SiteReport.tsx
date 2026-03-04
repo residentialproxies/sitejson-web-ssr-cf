@@ -7,7 +7,7 @@ import { fetchAlternatives } from '../services/api';
 import { StatusPoller } from '../components/site/StatusPoller';
 import { Button } from '../components/ui/Button';
 import { RefreshCw, ExternalLink, AlertCircle, ChevronRight, Code2, ShieldCheck, ShieldAlert, Clock } from 'lucide-react';
-import { cn, getRankBadgeColor, formatNumber, getRelativeTime } from '../lib/utils';
+import { cn, getRankBadgeColor, formatNumber, getRelativeTime, normalizeDirectorySlug } from '../lib/utils';
 import type { AlternativeSite } from '../lib/api-client/types';
 
 import { IdentityCard } from '../components/site/IdentityCard';
@@ -56,6 +56,7 @@ const SiteReport: React.FC<SiteReportProps> = ({ domain }) => {
   const ai = data.aiAnalysis;
   const globalRank = data.radar?.globalRank ?? data.trafficData?.globalRank;
   const isSafe = ai ? ai.risk?.sentiment === 'Professional' : true;
+  const categorySlug = data.taxonomy?.iabCategory ? normalizeDirectorySlug(data.taxonomy.iabCategory) : '';
 
   return (
     <div className="bg-slate-50/50 min-h-screen pb-20 font-sans">
@@ -185,9 +186,9 @@ const SiteReport: React.FC<SiteReportProps> = ({ domain }) => {
             <div>
                  <h3 className="font-bold text-slate-900 mb-4">Explore More</h3>
                  <div className="flex flex-wrap gap-3">
-                    {ai?.classification?.category && (
-                        <Link href={`/directory/category/${ai.classification.category.toLowerCase()}`} className="text-sm text-slate-500 hover:text-blue-600 underline decoration-slate-300 underline-offset-4">
-                            Top {ai.classification.category} Sites
+                    {data.taxonomy?.iabCategory && categorySlug && (
+                        <Link href={`/directory/category/${categorySlug}`} className="text-sm text-slate-500 hover:text-blue-600 underline decoration-slate-300 underline-offset-4">
+                            Top {data.taxonomy.iabCategory} Sites
                         </Link>
                     )}
                      <Link href="/directory/category/technology" className="text-sm text-slate-500 hover:text-blue-600 underline decoration-slate-300 underline-offset-4">

@@ -10,11 +10,11 @@ import {
   DollarSign,
   Radio,
   BarChart2,
-  Award,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
+import { ReportEmptyState } from '../report-empty-state';
 
 export const runtime = 'edge';
 
@@ -38,7 +38,7 @@ function formatSignal(signal: string): string {
 export default async function BusinessPage({ params }: BusinessPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
-  if (!result) return null;
+  if (!result) return <ReportEmptyState domain={domain} section="business" />;
 
   const { report } = result;
   const ai = report.aiAnalysis;
@@ -72,7 +72,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
           {/* Summary Card */}
           {ai.business && (
-            <DataCard title="Business Profile" icon={Briefcase}>
+            <DataCard title="Business Profile" icon={<Briefcase className="w-4 h-4 text-gray-500" />}>
               {ai.business.summary && (
                 <div className="pb-2 border-b border-gray-100 mb-2">
                   <p className="text-sm text-gray-700 leading-relaxed">{ai.business.summary}</p>
@@ -88,13 +88,13 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
           )}
 
           {/* Classification */}
-          {ai.classification && (
-            <DataCard title="Classification" icon={Tag}>
-              <DataRow label="Category" value={ai.classification.category ?? 'N/A'} />
-              <DataRow label="Sub-Category" value={ai.classification.subCategory ?? 'N/A'} />
-              {ai.classification.tags && ai.classification.tags.length > 0 && (
+          {taxonomy && (
+            <DataCard title="Classification" icon={<Tag className="w-4 h-4 text-gray-500" />}>
+              <DataRow label="Category" value={taxonomy.iabCategory ?? 'N/A'} />
+              <DataRow label="Sub-Category" value={taxonomy.iabSubCategory ?? 'N/A'} />
+              {taxonomy.tags && taxonomy.tags.length > 0 && (
                 <div className="pt-2 border-t border-gray-100 mt-2">
-                  <TagList tags={ai.classification.tags} />
+                  <TagList tags={taxonomy.tags} />
                 </div>
               )}
             </DataCard>
@@ -110,7 +110,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
           {/* Trust Score */}
           {ai.risk && (
-            <DataCard title="Trust Assessment" icon={Shield}>
+            <DataCard title="Trust Assessment" icon={<Shield className="w-4 h-4 text-gray-500" />}>
               <DataRow
                 label="Trust Score"
                 value={<ScoreBadge score={ai.risk.score ?? 0} />}
@@ -140,7 +140,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
           {/* Site Score */}
           {score?.value != null && (
-            <DataCard title="Overall Site Score" icon={Target}>
+            <DataCard title="Overall Site Score" icon={<Target className="w-4 h-4 text-gray-500" />}>
               <DataRow
                 label="Score"
                 value={<ScoreBadge score={score.value} />}
@@ -155,7 +155,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Left: Google Ads Transparency */}
           {ads && (
-            <DataCard title="Google Ads Transparency" icon={Megaphone}>
+            <DataCard title="Google Ads Transparency" icon={<Megaphone className="w-4 h-4 text-gray-500" />}>
               <DataRow
                 label="Is Advertiser"
                 value={
@@ -212,7 +212,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
           {/* Right: Publisher Monetization */}
           {publisher && (
-            <DataCard title="Publisher Monetization" icon={DollarSign}>
+            <DataCard title="Publisher Monetization" icon={<DollarSign className="w-4 h-4 text-gray-500" />}>
               <DataRow
                 label="ads.txt"
                 value={
@@ -242,7 +242,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
       {/* Row 3: Taxonomy */}
       {taxonomy && (
-        <DataCard title="IAB Taxonomy" icon={Radio}>
+        <DataCard title="IAB Taxonomy" icon={<Radio className="w-4 h-4 text-gray-500" />}>
           <DataRow label="IAB Category" value={taxonomy.iabCategory ?? 'N/A'} />
           <DataRow label="IAB Sub-Category" value={taxonomy.iabSubCategory ?? 'N/A'} />
           {taxonomy.confidence != null && (
@@ -251,9 +251,9 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               value={
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border ${
-                    taxonomy.confidence >= 80
+                    taxonomy.confidence >= 0.8
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : taxonomy.confidence >= 60
+                      : taxonomy.confidence >= 0.6
                         ? 'bg-yellow-50 text-yellow-700 border-yellow-200'
                         : 'bg-red-50 text-red-700 border-red-200'
                   }`}
@@ -278,7 +278,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
       {/* Row 4: Score with Signals (enhanced) */}
       {score?.value != null && score.signals && score.signals.length > 0 && (
-        <DataCard title="Score Signals" icon={BarChart2}>
+        <DataCard title="Score Signals" icon={<BarChart2 className="w-4 h-4 text-gray-500" />}>
           <DataRow
             label="Overall Score"
             value={<ScoreBadge score={score.value} />}

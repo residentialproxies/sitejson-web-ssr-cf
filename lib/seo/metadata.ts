@@ -1,14 +1,38 @@
 import type { Metadata } from 'next';
 
 const siteName = 'SiteJSON';
+const BASE_URL = process.env.PUBLIC_SITE_BASE_URL ?? 'https://sitejson.com';
+
+// Default OG image configuration
+const defaultOGImage = {
+  url: `${BASE_URL}/api/og`,
+  width: 1200,
+  height: 630,
+  alt: 'SiteJSON - Website Intelligence Platform',
+};
 
 export const buildBaseMetadata = (): Metadata => ({
-  metadataBase: new URL(process.env.PUBLIC_SITE_BASE_URL ?? 'https://sitejson.com'),
+  metadataBase: new URL(BASE_URL),
   title: {
     default: `${siteName} — Website Intelligence, Structured Data`,
     template: `%s | ${siteName}`,
   },
-  description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
+  description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals. Enrich your data in under 200ms.',
+  keywords: ['website intelligence', 'SEO analysis', 'tech stack detection', 'traffic estimation', 'domain analysis', 'API'],
+  authors: [{ name: 'SiteJSON' }],
+  creator: 'SiteJSON',
+  publisher: 'SiteJSON',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
@@ -23,33 +47,59 @@ export const buildBaseMetadata = (): Metadata => ({
     type: 'website',
     siteName,
     title: `${siteName} — Website Intelligence, Structured Data`,
-    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
+    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals. Enrich your data in under 200ms.',
+    images: [defaultOGImage],
+    locale: 'en_US',
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@sitejson',
+    creator: '@sitejson',
     title: `${siteName} — Website Intelligence, Structured Data`,
-    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
+    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals. Enrich your data in under 200ms.',
+    images: [`${BASE_URL}/api/og`],
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+  },
+  alternates: {
+    canonical: '/',
+    types: {
+      'application/rss+xml': `${BASE_URL}/rss.xml`,
+    },
   },
 });
 
-export const buildReportMetadata = (domain: string): Metadata => ({
-  title: `${domain} Website Intelligence Report`,
-  description: `Analyze ${domain} with SEO, infrastructure, monetization, and trust signals.`,
-  alternates: {
-    canonical: `/data/${domain}`,
-  },
-  openGraph: {
-    title: `${domain} Website Intelligence Report | ${siteName}`,
-    description: `Analyze ${domain} with SEO, infrastructure, monetization, and trust signals.`,
-    url: `/data/${domain}`,
-    type: 'article',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: `${domain} Website Intelligence Report | ${siteName}`,
-    description: `Analyze ${domain} with SEO, infrastructure, monetization, and trust signals.`,
-  },
-});
+export const buildReportMetadata = (domain: string, data?: { score?: number; traffic?: number }): Metadata => {
+  const scoreText = data?.score ? ` with trust score ${data.score}` : '';
+  const trafficText = data?.traffic ? ` and ${(data.traffic / 1000000).toFixed(1)}M monthly visits` : '';
+
+  return {
+    title: `${domain} Website Intelligence Report`,
+    description: `Comprehensive analysis of ${domain}${scoreText}${trafficText}. SEO metrics, tech stack, traffic data, and trust signals.`,
+    alternates: {
+      canonical: `/data/${domain}`,
+    },
+    openGraph: {
+      title: `${domain} Website Intelligence Report | ${siteName}`,
+      description: `Comprehensive analysis of ${domain}${scoreText}${trafficText}. SEO metrics, tech stack, traffic data, and trust signals.`,
+      url: `/data/${domain}`,
+      type: 'article',
+      images: [{
+        url: `${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}${data?.score ? `&score=${data.score}` : ''}`,
+        width: 1200,
+        height: 630,
+        alt: `${domain} website analysis report`,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${domain} Website Intelligence Report | ${siteName}`,
+      description: `Comprehensive analysis of ${domain}${scoreText}${trafficText}. SEO metrics, tech stack, traffic data, and trust signals.`,
+      images: [`${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}${data?.score ? `&score=${data.score}` : ''}`],
+    },
+  };
+};
 
 export const buildSitePageMetadata = (domain: string): Metadata => ({
   title: `Analyzing ${domain}`,
@@ -76,6 +126,12 @@ export const buildDataSubPageMetadata = (
     tech: `Technology stack, DNS records, infrastructure details, and provider health for ${domain}.`,
     business: `AI business intelligence, trust assessment, advertising, and monetization data for ${domain}.`,
   };
+  const ogImages: Record<string, string> = {
+    traffic: `${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}&type=traffic`,
+    seo: `${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}&type=seo`,
+    tech: `${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}&type=tech`,
+    business: `${BASE_URL}/api/og?domain=${encodeURIComponent(domain)}&type=business`,
+  };
   return {
     title: titles[subPage],
     description: descriptions[subPage],
@@ -87,11 +143,18 @@ export const buildDataSubPageMetadata = (
       description: descriptions[subPage],
       url: `/data/${domain}/${subPage}`,
       type: 'article',
+      images: [{
+        url: ogImages[subPage],
+        width: 1200,
+        height: 630,
+        alt: `${domain} ${subPage} analysis`,
+      }],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `${titles[subPage]} | ${siteName}`,
       description: descriptions[subPage],
+      images: [ogImages[subPage]],
     },
   };
 };
@@ -110,11 +173,18 @@ export const buildDirectoryMetadata = (type: string, slug: string): Metadata => 
       description: `Discover the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
       url: `/directory/${type}/${slug}`,
       type: 'website',
+      images: [{
+        url: `${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(slug)}`,
+        width: 1200,
+        height: 630,
+        alt: `Top ${display} websites directory`,
+      }],
     },
     twitter: {
-      card: 'summary',
+      card: 'summary_large_image',
       title: `Top ${display} Websites | ${siteName}`,
       description: `Discover the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
+      images: [`${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(slug)}`],
     },
   };
 };

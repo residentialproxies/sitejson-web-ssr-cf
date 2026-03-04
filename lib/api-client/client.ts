@@ -33,8 +33,8 @@ export const getSiteReport = async (
   if (!res?.ok || !res.data) return null;
   return {
     report: res.data.report,
-    isStale: res.data.freshness.is_stale,
-    updatedAt: res.data.freshness.updated_at,
+    isStale: res.data.freshness?.is_stale ?? true,
+    updatedAt: res.data.freshness?.updated_at ?? '',
   };
 };
 
@@ -50,3 +50,6 @@ export const getDirectory = async (
   if (!res?.ok || !res.data) return null;
   return res.data;
 };
+
+// Note: SWR hooks are available in './swr-hooks' but must be imported separately
+// to avoid bundling client-only code in server components

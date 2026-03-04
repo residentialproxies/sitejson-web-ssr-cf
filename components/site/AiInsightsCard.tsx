@@ -1,21 +1,27 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Sparkles, ShieldAlert, ShieldCheck, Target, Timer } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import Link from 'next/link';
-import { cn } from '../../lib/utils';
+import { cn, normalizeDirectorySlug } from '../../lib/utils';
 
 export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const ai = data.aiAnalysis;
   const score = data.score;
   const timing = data._meta?.timing;
 
-  if (!ai) return null;
+  const riskScore = ai?.risk?.score ?? 0;
+  const isSafe = ai?.risk?.sentiment === 'Professional';
 
-  const riskScore = ai.risk?.score ?? 0;
-  const isSafe = ai.risk?.sentiment === 'Professional';
-  const rotation = (riskScore / 100) * 180;
+  const rotation = useMemo(() => (riskScore / 100) * 180, [riskScore]);
+  const categorySlug = useMemo(
+    () => data.taxonomy?.iabCategory ? normalizeDirectorySlug(data.taxonomy.iabCategory) : '',
+    [data.taxonomy?.iabCategory],
+  );
+  const topTags = useMemo(() => data.taxonomy?.tags?.slice(0, 3) ?? [], [data.taxonomy?.tags]);
+
+  if (!ai) return null;
 
   return (
     <Card className="border border-slate-200 shadow-sm bg-gradient-to-br from-white to-violet-50/30">
@@ -44,19 +50,19 @@ export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             )}
 
             <div className="flex flex-wrap gap-2">
-              {ai.classification?.category && (
-                <Link href={`/directory/category/${ai.classification.category.toLowerCase()}`}>
+              {data.taxonomy?.iabCategory && categorySlug && (
+                <Link href={`/directory/category/${categorySlug}`}>
                   <Badge className="bg-slate-900 text-white cursor-pointer px-3 py-1">
-                    {ai.classification.category}
+                    {data.taxonomy.iabCategory}
                   </Badge>
                 </Link>
               )}
-              {ai.classification?.subCategory && (
+              {data.taxonomy?.iabSubCategory && (
                 <Badge variant="secondary" className="text-slate-600 bg-white border border-slate-200">
-                  {ai.classification.subCategory}
+                  {data.taxonomy.iabSubCategory}
                 </Badge>
               )}
-              {ai.classification?.tags?.slice(0, 3).map(tag => (
+              {topTags.map(tag => (
                 <Badge key={tag} variant="outline" className="text-slate-500 border-slate-200">
                   #{tag}
                 </Badge>

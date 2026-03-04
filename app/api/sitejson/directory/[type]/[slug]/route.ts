@@ -1,4 +1,4 @@
-import { proxyToSitejson } from '../../../_lib';
+import { rateLimitedProxy } from '../../../_lib';
 
 export const runtime = 'edge';
 
@@ -15,7 +15,8 @@ export async function GET(request: Request, { params }: RouteContext) {
   const page = url.searchParams.get('page') ?? '1';
   const pageSize = url.searchParams.get('page_size') ?? '20';
 
-  return proxyToSitejson(
+  return rateLimitedProxy(
+    request,
     `/api/v1/directory/${encodeURIComponent(type)}/${encodeURIComponent(slug)}?page=${encodeURIComponent(page)}&page_size=${encodeURIComponent(pageSize)}`,
   );
 }

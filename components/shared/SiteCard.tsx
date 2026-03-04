@@ -1,5 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import type { DirectoryItem } from '../../lib/api-client/types';
 import { Card } from '../ui/Card';
 import { formatNumber } from '../../lib/utils';
@@ -17,11 +18,12 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
     <Link href={`/data/${site.domain}`} className="group block h-full">
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-md hover:border-slate-300 group-hover:-translate-y-1">
         <div className="relative h-32 bg-slate-100 border-b border-slate-100 overflow-hidden">
-          <img
+          <Image
             src={screenshotUrl(site.domain)}
             alt={site.domain}
+            fill
+            sizes="(max-width: 768px) 100vw, 33vw"
             className="w-full h-full object-cover object-top opacity-90 transition-opacity group-hover:opacity-100"
-            loading="lazy"
           />
           {typeof site.rank === 'number' && site.rank > 0 && (
             <div className="absolute top-3 left-3">
@@ -41,10 +43,12 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
 
         <div className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <img
-                src={`https://www.google.com/s2/favicons?domain=${site.domain}&sz=32`}
-                alt=""
-                className="w-4 h-4 rounded-sm"
+            <Image
+              src={`https://www.google.com/s2/favicons?domain=${site.domain}&sz=32`}
+              alt=""
+              width={16}
+              height={16}
+              className="w-4 h-4 rounded-sm"
             />
             <h3 className="font-bold text-slate-900 truncate">{site.domain}</h3>
           </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Layout, FileText, Link as LinkIcon, Image, CheckCircle2, XCircle, Mail, Phone, Globe } from 'lucide-react';
+import { Layout, FileText, Link as LinkIcon, Image as ImageIcon, CheckCircle2, XCircle, Mail, Phone, Globe } from 'lucide-react';
 
 export const SeoStructureCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const seo = data.seo;
@@ -34,7 +34,7 @@ export const SeoStructureCard: React.FC<{ data: SiteReport }> = ({ data }) => {
               <div className="text-[10px] text-slate-500 uppercase mt-1">External</div>
             </div>
             <div className="p-2 rounded-lg bg-slate-50 border border-slate-100">
-              <div className="flex justify-center mb-1 text-slate-400"><Image size={14} /></div>
+              <div className="flex justify-center mb-1 text-slate-400"><ImageIcon size={14} /></div>
               <div className="font-bold text-lg text-slate-900 leading-none">{seo.imagesCount ?? 0}</div>
               <div className="text-[10px] text-slate-500 uppercase mt-1">Images</div>
             </div>
