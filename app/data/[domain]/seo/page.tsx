@@ -287,6 +287,24 @@ export default async function SeoPage({ params }: SeoPageProps) {
                 description={report.meta?.description ? 'Meta description present' : 'Missing meta description'}
               />
             </div>
+            {files.robotsSitemapUrls && files.robotsSitemapUrls.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500 mb-2">Sitemap URLs</p>
+                <div className="space-y-1">
+                  {files.robotsSitemapUrls.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-xs text-blue-600 hover:underline truncate"
+                    >
+                      {url}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </section>
       )}

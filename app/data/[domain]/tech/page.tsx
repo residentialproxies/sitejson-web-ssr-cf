@@ -12,7 +12,7 @@ import {
   Code,
   Tag,
 } from 'lucide-react';
-import { DataCard, DataRow, TagList } from '@/components/domain/data-card';
+import { DataCard, DataRow, StatusBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
 import { cn } from '@/lib/utils';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
@@ -39,6 +39,7 @@ export default async function TechPage({ params }: TechPageProps) {
   const { report } = result;
   const techStack = report.meta?.techStackDetected ?? [];
   const dns = report.dns;
+  const files = report.files;
   const radar = report.radar;
   const providerHealth = report.providerHealth;
   const timing = report._meta?.timing;
@@ -97,6 +98,50 @@ export default async function TechPage({ params }: TechPageProps) {
                   </div>
                 ))}
               </DataCard>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* Technical Files */}
+      {files && (
+        <section>
+          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-gray-500" />
+            Technical Files
+          </h2>
+          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <DataCard title="Robots" icon={<FileText className="w-4 h-4 text-gray-500" />}>
+                <DataRow
+                  label="robots.txt"
+                  value={<StatusBadge status={files.hasRobots ?? false} trueLabel="Found" falseLabel="Missing" />}
+                />
+              </DataCard>
+              <DataCard title="Sitemap" icon={<FileText className="w-4 h-4 text-gray-500" />}>
+                <DataRow
+                  label="sitemap.xml"
+                  value={<StatusBadge status={files.hasSitemap ?? false} trueLabel="Found" falseLabel="Missing" />}
+                />
+              </DataCard>
+            </div>
+            {files.robotsSitemapUrls && files.robotsSitemapUrls.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500 mb-2">Sitemap URLs</p>
+                <div className="space-y-1">
+                  {files.robotsSitemapUrls.map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block text-xs text-blue-600 hover:underline truncate"
+                    >
+                      {url}
+                    </a>
+                  ))}
+                </div>
+              </div>
             )}
           </div>
         </section>

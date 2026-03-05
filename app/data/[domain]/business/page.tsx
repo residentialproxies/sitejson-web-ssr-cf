@@ -10,6 +10,7 @@ import {
   DollarSign,
   Radio,
   BarChart2,
+  Palette,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
@@ -58,6 +59,8 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
       </div>
     );
   }
+
+  const visualAnalysis = ai?.visualAnalysis;
 
   return (
     <div className="space-y-6">
@@ -229,6 +232,12 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
                   <TagList tags={publisher.adSystems} variant="outline" />
                 </div>
               )}
+              {publisher.directCount != null && (
+                <DataRow label="Direct Sellers" value={publisher.directCount} />
+              )}
+              {publisher.resellerCount != null && (
+                <DataRow label="Reseller Sellers" value={publisher.resellerCount} />
+              )}
               {publisher.monetizationSignals && publisher.monetizationSignals.length > 0 && (
                 <div className="pt-2 border-t border-gray-100 mt-2">
                   <p className="text-xs text-gray-500 mb-1.5">Monetization Signals</p>
@@ -238,6 +247,24 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             </DataCard>
           )}
         </div>
+      )}
+
+      {/* Row 2.5: Visual AI Analysis */}
+      {visualAnalysis && (
+        <DataCard title="AI Visual Analysis" icon={<Palette className="w-4 h-4 text-gray-500" />}>
+          {visualAnalysis.designStyle && (
+            <DataRow label="Design Style" value={visualAnalysis.designStyle} />
+          )}
+          {visualAnalysis.vibe && (
+            <DataRow label="Vibe" value={visualAnalysis.vibe} />
+          )}
+          {visualAnalysis.uiScore != null && (
+            <DataRow label="UI Score" value={<ScoreBadge score={visualAnalysis.uiScore} />} />
+          )}
+          {visualAnalysis.logoText && (
+            <DataRow label="Detected Logo Text" value={visualAnalysis.logoText} />
+          )}
+        </DataCard>
       )}
 
       {/* Row 3: Taxonomy */}

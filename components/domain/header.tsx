@@ -15,7 +15,8 @@ interface DomainHeaderProps {
 }
 
 export function DomainHeader({ domain, report, updatedAt, isStale, className }: DomainHeaderProps) {
-  const screenshotUrl = getScreenshotUrl(domain, 'large', { format: 'webp', quality: 85 });
+  const screenshotUrl = report.visual?.screenshotUrl
+    || getScreenshotUrl(domain, 'large', { format: 'webp', quality: 85 });
   const faviconUrl = getFaviconUrl(domain, 32);
   const techStack = report.meta?.techStackDetected ?? [];
   const blurPlaceholder = generateBlurPlaceholder(1280, 800);

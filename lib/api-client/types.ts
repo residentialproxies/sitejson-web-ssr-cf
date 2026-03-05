@@ -73,8 +73,11 @@ export interface SiteReport {
     bounceRate?: number | null;
     avgVisitDuration?: number | null;
     pagesPerVisit?: number | null;
+    dataYear?: string | null;
+    dataMonth?: string | null;
+    cachedAt?: number | null;
     topCountry?: string;
-    topRegions?: Array<{ country: string; share: number }>;
+    topRegions?: Array<{ country: string; share: number; countryCode?: number }>;
     topKeywords?: Array<{ keyword: string; volume: number; cpc: number }>;
     trafficSources?: {
       direct: number;
@@ -122,6 +125,12 @@ export interface SiteReport {
       score?: number;
       isSpam?: boolean;
     };
+    visualAnalysis?: {
+      designStyle?: string;
+      uiScore?: number;
+      vibe?: string;
+      logoText?: string;
+    };
   };
 
   score?: {
@@ -152,6 +161,12 @@ export interface SiteReport {
       triggered?: boolean;
       reason?: string;
     };
+    debug?: {
+      fallback_path?: {
+        browser?: string;
+        traffic?: string;
+      };
+    };
   };
 }
 
@@ -164,6 +179,40 @@ export interface SiteReportResponse {
       updated_at: string;
     };
     report: SiteReport;
+  };
+  error?: BackendErrorPayload;
+}
+
+export interface ProviderCompleteness {
+  total: number;
+  present: number;
+  missing: number;
+  fields: Record<string, boolean>;
+}
+
+export interface ProviderHealthSnapshot {
+  ok: boolean;
+  errorCode?: string;
+}
+
+export interface SiteProviderSummaryItem {
+  provider: string;
+  hasData: boolean;
+  health: ProviderHealthSnapshot | null;
+  completeness: ProviderCompleteness;
+}
+
+export interface SiteProviderSummaryResponse {
+  ok: boolean;
+  data?: {
+    domain: string;
+    updatedAt: string;
+    providers: SiteProviderSummaryItem[];
+    score?: {
+      value: number;
+      signals: string[];
+    };
+    _meta?: SiteReport['_meta'];
   };
   error?: BackendErrorPayload;
 }

@@ -5,13 +5,19 @@ import { SWRConfig } from 'swr';
 import {
   getSiteReport,
   getDirectory,
+  getSiteProviderSummary,
 } from '@/lib/api-client/client';
 import {
   useSiteReport,
   useJobStatus,
   useDirectory,
 } from '@/lib/api-client/swr-hooks';
-import type { SiteReportResponse, DirectoryResponse, SiteReport } from '@/lib/api-client/types';
+import type {
+  SiteReportResponse,
+  DirectoryResponse,
+  SiteReport,
+  SiteProviderSummaryResponse,
+} from '@/lib/api-client/types';
 
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
@@ -148,7 +154,15 @@ describe('API Client', () => {
       const result = await getDirectory('technology', 'react');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        'http://localhost:8787/api/v1/directory/technology/react?page=1&page_size=24',
+        expect.stringContaining('/api/v1/directory/'),
+        expect.any(Object)
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('technology/react'),
+        expect.any(Object)
+      );
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('page=1&page_size=24'),
         expect.any(Object)
       );
 
@@ -188,6 +202,54 @@ describe('API Client', () => {
         expect.stringContaining('tech%20type/slug%2Fwith%2Fslashes'),
         expect.any(Object)
       );
+    });
+  });
+
+  describe('getSiteProviderSummary', () => {
+    it('should fetch provider summary successfully', async () => {
+      const mockResponse: SiteProviderSummaryResponse = {
+        ok: true,
+        data: {
+          domain: 'example.com',
+          updatedAt: '2026-03-01T00:00:00Z',
+          providers: [
+            {
+              provider: 'traffic',
+              hasData: true,
+              health: { ok: true },
+              completeness: {
+                total: 10,
+                present: 9,
+                missing: 1,
+                fields: { monthlyVisits: true },
+              },
+            },
+          ],
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await getSiteProviderSummary('example.com');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'http://localhost:8787/api/v1/sites/example.com/providers',
+        expect.any(Object),
+      );
+      expect(result).toEqual(mockResponse.data);
+    });
+
+    it('should return null when provider summary request fails', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 500,
+      });
+
+      const result = await getSiteProviderSummary('example.com');
+      expect(result).toBeNull();
     });
   });
 

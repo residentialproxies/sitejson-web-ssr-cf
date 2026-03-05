@@ -1,11 +1,17 @@
-import type { SiteReportResponse, DirectoryResponse, SiteReport } from './types';
+import type {
+  SiteReportResponse,
+  DirectoryResponse,
+  SiteReport,
+  SiteProviderSummaryResponse,
+} from './types';
+import { readRuntimeEnv } from '@/lib/runtime-env';
 
 const getBaseUrl = () =>
-  process.env.SITEJSON_API_BASE_URL ??
-  process.env.NEXT_PUBLIC_SITEJSON_API_BASE_URL ??
+  readRuntimeEnv('SITEJSON_API_BASE_URL') ??
+  readRuntimeEnv('NEXT_PUBLIC_SITEJSON_API_BASE_URL') ??
   'http://127.0.0.1:8787';
 
-const getApiKey = () => process.env.SITEJSON_API_KEY ?? '';
+const getApiKey = () => readRuntimeEnv('SITEJSON_API_KEY') ?? '';
 
 const fetchApi = async <T>(path: string): Promise<T | null> => {
   const apiKey = getApiKey();
@@ -46,6 +52,16 @@ export const getDirectory = async (
 ): Promise<DirectoryResponse['data'] | null> => {
   const res = await fetchApi<DirectoryResponse>(
     `/api/v1/directory/${encodeURIComponent(type)}/${encodeURIComponent(slug)}?page=${page}&page_size=${pageSize}`,
+  );
+  if (!res?.ok || !res.data) return null;
+  return res.data;
+};
+
+export const getSiteProviderSummary = async (
+  domain: string,
+): Promise<SiteProviderSummaryResponse['data'] | null> => {
+  const res = await fetchApi<SiteProviderSummaryResponse>(
+    `/api/v1/sites/${encodeURIComponent(domain)}/providers`,
   );
   if (!res?.ok || !res.data) return null;
   return res.data;

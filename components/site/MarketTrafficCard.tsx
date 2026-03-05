@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { BarChart3, Globe, Clock, FileStack } from 'lucide-react';
 import { cn, formatNumber, formatDurationHMS, getRankBadgeColor } from '../../lib/utils';
 import { Badge } from '../ui/Badge';
+import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
 
 const rankBucket = (rank: number): string => {
   if (rank <= 100) return 'Top 100';
@@ -14,7 +15,7 @@ const rankBucket = (rank: number): string => {
 };
 
 export const MarketTrafficCard: React.FC<{ data: SiteReport }> = ({ data }) => {
-  const traffic = data.trafficData;
+  const traffic = normalizeTrafficDataForDisplay(data.trafficData);
   const radar = data.radar;
 
   const globalRank = radar?.globalRank ?? traffic?.globalRank ?? null;
@@ -72,7 +73,7 @@ export const MarketTrafficCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             {typeof traffic.bounceRate === 'number' && (
               <div>
                 <div className="text-xs text-slate-500 mb-1">Bounce Rate</div>
-                <div className="text-sm font-bold text-slate-900">{(traffic.bounceRate * 100).toFixed(1)}%</div>
+                <div className="text-sm font-bold text-slate-900">{traffic.bounceRate.toFixed(1)}%</div>
               </div>
             )}
             {typeof traffic.avgVisitDuration === 'number' && (
@@ -102,16 +103,16 @@ export const MarketTrafficCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             <div className="text-[10px] font-bold uppercase text-slate-400 mb-2">Traffic Sources</div>
             <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-slate-100">
               {traffic.trafficSources.direct > 0 && (
-                <div className="bg-blue-500 h-full" style={{ width: `${traffic.trafficSources.direct * 100}%` }} title={`Direct ${(traffic.trafficSources.direct * 100).toFixed(0)}%`} />
+                <div className="bg-blue-500 h-full" style={{ width: `${traffic.trafficSources.direct}%` }} title={`Direct ${traffic.trafficSources.direct.toFixed(0)}%`} />
               )}
               {traffic.trafficSources.search > 0 && (
-                <div className="bg-emerald-500 h-full" style={{ width: `${traffic.trafficSources.search * 100}%` }} title={`Search ${(traffic.trafficSources.search * 100).toFixed(0)}%`} />
+                <div className="bg-emerald-500 h-full" style={{ width: `${traffic.trafficSources.search}%` }} title={`Search ${traffic.trafficSources.search.toFixed(0)}%`} />
               )}
               {traffic.trafficSources.social > 0 && (
-                <div className="bg-violet-500 h-full" style={{ width: `${traffic.trafficSources.social * 100}%` }} title={`Social ${(traffic.trafficSources.social * 100).toFixed(0)}%`} />
+                <div className="bg-violet-500 h-full" style={{ width: `${traffic.trafficSources.social}%` }} title={`Social ${traffic.trafficSources.social.toFixed(0)}%`} />
               )}
               {traffic.trafficSources.referral > 0 && (
-                <div className="bg-amber-500 h-full" style={{ width: `${traffic.trafficSources.referral * 100}%` }} title={`Referral ${(traffic.trafficSources.referral * 100).toFixed(0)}%`} />
+                <div className="bg-amber-500 h-full" style={{ width: `${traffic.trafficSources.referral}%` }} title={`Referral ${traffic.trafficSources.referral.toFixed(0)}%`} />
               )}
             </div>
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-slate-500">

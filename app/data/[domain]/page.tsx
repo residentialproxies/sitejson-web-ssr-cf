@@ -17,6 +17,7 @@ import {
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
 import { formatNumber, formatDuration } from '@/lib/utils';
+import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
 import { ReportEmptyState } from './report-empty-state';
 
 export const runtime = 'edge';
@@ -35,7 +36,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
   const { report } = result;
   const seo = report.seo;
   const dns = report.dns;
-  const traffic = report.trafficData;
+  const traffic = normalizeTrafficDataForDisplay(report.trafficData);
   const ai = report.aiAnalysis;
   const radar = report.radar;
   const files = report.files;
@@ -139,7 +140,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
             <DataRow label="Monthly Visits" value={formatNumber(traffic.monthlyVisits)} />
           )}
           {traffic.bounceRate != null && (
-            <DataRow label="Bounce Rate" value={`${traffic.bounceRate}%`} />
+            <DataRow label="Bounce Rate" value={`${traffic.bounceRate.toFixed(2)}%`} />
           )}
           {traffic.avgVisitDuration != null && (
             <DataRow label="Avg Visit Duration" value={formatDuration(traffic.avgVisitDuration)} />
@@ -208,6 +209,24 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
               />
             }
           />
+          {files.robotsSitemapUrls && files.robotsSitemapUrls.length > 0 && (
+            <div className="py-2">
+              <span className="text-sm text-gray-500 mb-1 block">Sitemap URLs</span>
+              <div className="space-y-1">
+                {files.robotsSitemapUrls.map((url) => (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="block text-xs text-blue-600 hover:underline truncate"
+                  >
+                    {url}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </DataCard>
       )}
 
@@ -301,6 +320,12 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
               <span className="text-sm text-gray-500 mb-1 block">Ad Systems</span>
               <TagList tags={publisher.adSystems} />
             </div>
+          )}
+          {publisher.directCount != null && (
+            <DataRow label="Direct Sellers" value={publisher.directCount} />
+          )}
+          {publisher.resellerCount != null && (
+            <DataRow label="Reseller Sellers" value={publisher.resellerCount} />
           )}
           {publisher.monetizationSignals && publisher.monetizationSignals.length > 0 && (
             <div className="pt-2">

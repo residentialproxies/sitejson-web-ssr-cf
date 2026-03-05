@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { getSiteReport } from '@/lib/api-client/client';
 import { formatBigNumber, formatDurationHMS, formatNumber } from '@/lib/utils';
+import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
 import { ReportEmptyState } from '../report-empty-state';
 
@@ -54,14 +55,20 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
   if (!result) return <ReportEmptyState domain={domain} section="traffic" />;
 
   const { report } = result;
-  const traffic = report.trafficData;
+  const traffic = normalizeTrafficDataForDisplay(report.trafficData);
   const radar = report.radar;
+  const whois = traffic?.whois;
   const topRegions = traffic?.topRegions ?? [];
   const topKeywords = traffic?.topKeywords ?? [];
   const trafficSources = traffic?.trafficSources;
-  const maxRegionShare = topRegions.length > 0 ? Math.max(...topRegions.map((r) => r.share)) : 1;
+  const maxRegionShare = topRegions.length > 0 ? Math.max(1, ...topRegions.map((r) => r.share)) : 1;
 
   const globalRank = traffic?.globalRank ?? radar?.globalRank;
+  const trafficDataPeriod = traffic?.dataYear && traffic?.dataMonth
+    ? `${traffic.dataYear}-${traffic.dataMonth}`
+    : null;
+  const trafficCachedAt = traffic?.cachedAt != null ? formatUnixTimestamp(traffic.cachedAt) : null;
+  const radarSourceTime = radar?.sourceTimestamp ? formatDateTime(radar.sourceTimestamp) : null;
 
   return (
     <div className="space-y-6">
@@ -138,6 +145,30 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
         </div>
       )}
 
+      {/* Data Freshness */}
+      {(trafficDataPeriod || trafficCachedAt || radarSourceTime || radar?.queued) && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
+            <Clock className="w-4 h-4 text-gray-400" />
+            <h3 className="text-sm font-semibold text-gray-900">Data Freshness</h3>
+          </div>
+          <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {trafficDataPeriod && (
+              <InfoItem label="Traffic Snapshot" value={trafficDataPeriod} />
+            )}
+            {trafficCachedAt && (
+              <InfoItem label="Traffic Cached At" value={trafficCachedAt} />
+            )}
+            {radarSourceTime && (
+              <InfoItem label="Radar Source Time" value={radarSourceTime} />
+            )}
+            {radar?.queued != null && (
+              <InfoItem label="Radar Refresh" value={radar.queued ? 'Queued' : 'Up to date'} />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Traffic Sources */}
       {trafficSources && (
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
@@ -182,6 +213,9 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
                   {index + 1}
                 </span>
                 <span className="text-sm font-medium text-gray-900 w-40 shrink-0">{region.country}</span>
+                {region.countryCode != null && (
+                  <span className="text-xs text-gray-400 w-14 shrink-0">#{region.countryCode}</span>
+                )}
                 <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-blue-500 rounded-full"
@@ -228,6 +262,60 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
           </table>
         </div>
       )}
+
+      {/* Whois */}
+      {whois && (
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
+            <Globe className="w-4 h-4 text-gray-400" />
+            <h3 className="text-sm font-semibold text-gray-900">Whois</h3>
+          </div>
+          <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {whois.registrar && (
+              <InfoItem label="Registrar" value={whois.registrar} />
+            )}
+            {whois.createdAt && (
+              <InfoItem label="Created At" value={formatDateTime(whois.createdAt)} />
+            )}
+            {whois.updatedAt && (
+              <InfoItem label="Updated At" value={formatDateTime(whois.updatedAt)} />
+            )}
+            {whois.expiresAt && (
+              <InfoItem label="Expires At" value={formatDateTime(whois.expiresAt)} />
+            )}
+            {whois.nameservers && whois.nameservers.length > 0 && (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <p className="text-xs text-gray-500 mb-1">Nameservers</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {whois.nameservers.map((ns) => (
+                    <span
+                      key={ns}
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-50 text-gray-700 border border-gray-200 font-mono"
+                    >
+                      {ns}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {whois.status && whois.status.length > 0 && (
+              <div className="sm:col-span-2 lg:col-span-3">
+                <p className="text-xs text-gray-500 mb-1">Status</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {whois.status.map((status) => (
+                    <span
+                      key={status}
+                      className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-blue-50 text-blue-700 border border-blue-200"
+                    >
+                      {status}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -264,4 +352,29 @@ function InfoItem({ label, value }: { label: string; value: string }) {
       <p className="text-sm font-medium text-gray-900">{value}</p>
     </div>
   );
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+  return date.toLocaleString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatUnixTimestamp(unixSeconds: number): string {
+  if (!Number.isFinite(unixSeconds)) {
+    return 'Unknown';
+  }
+  const date = new Date(unixSeconds * 1000);
+  if (Number.isNaN(date.getTime())) {
+    return 'Unknown';
+  }
+  return formatDateTime(date.toISOString());
 }

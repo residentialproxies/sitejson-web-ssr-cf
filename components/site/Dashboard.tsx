@@ -5,13 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { cn, formatNumber } from '../../lib/utils';
 import { ShieldAlert, ShieldCheck, Share2, Users, Globe, Cpu } from 'lucide-react';
+import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
 
-const screenshotFallback = (domain: string) =>
-  `https://image.thum.io/get/width/1200/noanimate/https://${domain}`;
+const THUMIO_BASE = 'https://image.thum.io/get/width/1200/noanimate';
+const screenshotFallback = (domain: string) => `${THUMIO_BASE}/https://${domain}`;
 
 export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const ai = data.aiAnalysis;
-  const traffic = data.trafficData;
+  const traffic = normalizeTrafficDataForDisplay(data.trafficData);
   const meta = data.meta;
   const ads = data.ads;
   const screenshotUrl = data.visual?.screenshotUrl || screenshotFallback(data.domain ?? '');
@@ -91,7 +92,7 @@ export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
                         {typeof traffic.bounceRate === 'number' && (
                           <div className="flex justify-between text-xs">
                               <span className="text-slate-500 flex items-center gap-1"><Users size={12}/> Bounce Rate</span>
-                              <span className="font-medium">{(traffic.bounceRate * 100).toFixed(1)}%</span>
+                              <span className="font-medium">{traffic.bounceRate.toFixed(1)}%</span>
                           </div>
                         )}
                         {traffic.topCountry && (
