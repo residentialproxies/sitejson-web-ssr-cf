@@ -33,10 +33,7 @@ export const ENDPOINT_CATEGORIES = [
   'Analysis',
   'Sites',
   'Providers',
-  'Jobs',
   'Directory',
-  'Ops',
-  'Health',
 ] as const;
 
 const providerDomainParam: ParamDef = {
@@ -216,19 +213,6 @@ export const endpoints: Endpoint[] = [
     visualize: 'provider-detail',
   },
 
-  // Jobs
-  {
-    id: 'get-job',
-    method: 'GET',
-    path: '/api/sitejson/jobs/{jobId}',
-    category: 'Jobs',
-    title: 'Poll Job Status',
-    description: 'Check the status and result of an analysis job.',
-    pathParams: [
-      { name: 'jobId', label: 'Job ID', placeholder: 'job_abc123', required: true },
-    ],
-  },
-
   // Directory
   {
     id: 'directory',
@@ -247,52 +231,4 @@ export const endpoints: Endpoint[] = [
     ],
   },
 
-  // Ops
-  {
-    id: 'ops-dashboard',
-    method: 'GET',
-    path: '/api/sitejson/ops/dashboard',
-    category: 'Ops',
-    title: 'Ops Dashboard',
-    description: 'Get operational dashboard stats (sites, jobs, queues).',
-  },
-  {
-    id: 'ops-queues',
-    method: 'GET',
-    path: '/api/sitejson/ops/queues',
-    category: 'Ops',
-    title: 'Queue Stats',
-    description: 'Get detailed queue statistics for all workers.',
-  },
-  {
-    id: 'ops-retry-dlq',
-    method: 'POST',
-    path: '/api/sitejson/ops/retry-dlq',
-    category: 'Ops',
-    title: 'Retry DLQ',
-    description: 'Retry failed jobs from the dead-letter queue.',
-    bodySchema: [
-      { name: 'queue', label: 'Queue Name', type: 'string', placeholder: 'browser' },
-      { name: 'limit', label: 'Max jobs to retry', type: 'number', placeholder: '10', defaultValue: '10' },
-    ],
-    exampleBody: { queue: 'browser', limit: 10 },
-  },
-
-  // Health
-  {
-    id: 'healthz',
-    method: 'GET',
-    path: '/api/sitejson/health',
-    category: 'Health',
-    title: 'Health Check',
-    description: 'Basic health check — is the API process alive?',
-  },
-  {
-    id: 'readyz',
-    method: 'GET',
-    path: '/api/sitejson/health?check=ready',
-    category: 'Health',
-    title: 'Readiness Check',
-    description: 'Readiness check — are all dependencies (DB, Redis, queues) connected?',
-  },
 ];
