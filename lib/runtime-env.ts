@@ -16,11 +16,15 @@ const readFromCloudflareContext = (key: string): string | undefined => {
 };
 
 export const readRuntimeEnv = (key: string): string | undefined => {
+  const contextValue = readFromCloudflareContext(key);
+  if (contextValue) {
+    return contextValue;
+  }
+
   const processValue = process.env[key];
   if (typeof processValue === 'string') {
     const trimmed = processValue.trim();
     if (trimmed) return trimmed;
   }
-
-  return readFromCloudflareContext(key);
+  return undefined;
 };

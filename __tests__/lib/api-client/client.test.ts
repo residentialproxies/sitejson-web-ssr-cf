@@ -135,8 +135,8 @@ describe('API Client', () => {
         ok: true,
         data: {
           items: [
-            { domain: 'site1.com', title: 'Site 1', score: 95 },
-            { domain: 'site2.com', title: 'Site 2', score: 90 },
+            { domain: 'site1.com', title: 'Site 1' },
+            { domain: 'site2.com', title: 'Site 2' },
           ],
           pagination: {
             page: 1,

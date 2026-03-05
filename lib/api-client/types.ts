@@ -30,11 +30,6 @@ export interface SiteReport {
     internalLinks?: number;
     externalLinks?: number;
     imagesCount?: number;
-    contacts?: {
-      emails?: string[];
-      phones?: string[];
-      socialLinks?: string[];
-    };
   };
 
   files?: {
@@ -133,11 +128,6 @@ export interface SiteReport {
     };
   };
 
-  score?: {
-    value?: number;
-    signals?: string[];
-  };
-
   providerHealth?: Array<{
     provider: string;
     ok: boolean;
@@ -208,10 +198,6 @@ export interface SiteProviderSummaryResponse {
     domain: string;
     updatedAt: string;
     providers: SiteProviderSummaryItem[];
-    score?: {
-      value: number;
-      signals: string[];
-    };
     _meta?: SiteReport['_meta'];
   };
   error?: BackendErrorPayload;
@@ -237,7 +223,6 @@ export interface AlternativesResponse {
 export interface DirectoryItem {
   domain: string;
   title: string;
-  score: number;
   rank?: number;
 }
 

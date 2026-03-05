@@ -1,4 +1,5 @@
 import type { SiteReport } from '@/lib/api-client/types';
+import { normalizeDirectorySlug, normalizeDomainInput } from '@/lib/utils';
 
 /**
  * JSON-LD Structured Data Generators
@@ -69,7 +70,7 @@ export interface JsonLdBreadcrumbList {
     '@type': 'ListItem';
     position: number;
     name: string;
-    item: string;
+    item?: string;
   }>;
 }
 
@@ -104,7 +105,21 @@ export interface JsonLdSoftwareApplication {
   };
 }
 
-const BASE_URL = process.env.PUBLIC_SITE_BASE_URL ?? 'https://sitejson.com';
+const BASE_URL = (process.env.PUBLIC_SITE_BASE_URL ?? 'https://sitejson.com').replace(/\/+$/, '');
+
+const toAbsoluteUrl = (path: string): string => (
+  `${BASE_URL}${path.startsWith('/') ? path : `/${path}`}`
+);
+
+const toDisplayLabel = (value: string): string => {
+  const words = value
+    .trim()
+    .split('-')
+    .filter(Boolean);
+
+  if (words.length === 0) return value;
+  return words.map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+};
 
 /**
  * Generate Organization structured data
@@ -115,7 +130,7 @@ export function generateOrganizationJsonLd(): JsonLdOrganization {
     '@type': 'Organization',
     name: 'SiteJSON',
     url: BASE_URL,
-    logo: `${BASE_URL}/icons/icon-192x192.png`,
+    logo: toAbsoluteUrl('/icons/icon-192x192.png'),
     description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
     sameAs: [
       'https://twitter.com/sitejson',
@@ -136,7 +151,7 @@ export function generateWebSiteJsonLd(): JsonLdWebSite {
     description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
     potentialAction: {
       '@type': 'SearchAction',
-      target: `${BASE_URL}/site/{search_term_string}`,
+      target: toAbsoluteUrl('/site/{search_term_string}'),
       'query-input': 'required name=search_term_string',
     },
   };
@@ -156,7 +171,7 @@ export function generateWebPageJsonLd(
     '@type': 'WebPage',
     name: title,
     description,
-    url: `${BASE_URL}${path}`,
+    url: toAbsoluteUrl(path),
     ...(dateModified && { dateModified }),
   };
 }
@@ -174,7 +189,7 @@ export function generateBreadcrumbJsonLd(
       '@type': 'ListItem',
       position: index + 1,
       name: item.name,
-      item: item.path ? `${BASE_URL}${item.path}` : `${BASE_URL}`,
+      ...(item.path ? { item: toAbsoluteUrl(item.path) } : {}),
     })),
   };
 }
@@ -186,6 +201,7 @@ export function generateDatasetJsonLd(
   domain: string,
   report: SiteReport
 ): JsonLdDataset {
+  const normalizedDomain = normalizeDomainInput(domain);
   const metrics: string[] = [];
   if (report.seo) metrics.push('SEO Score', 'Link Structure', 'Heading Analysis');
   if (report.trafficData) metrics.push('Traffic Volume', 'Bounce Rate', 'Visit Duration');
@@ -195,9 +211,9 @@ export function generateDatasetJsonLd(
   return {
     '@context': 'https://schema.org',
     '@type': 'Dataset',
-    name: `${domain} Website Intelligence Report`,
-    description: `Comprehensive website analysis for ${domain} including traffic estimates, SEO metrics, technology stack, and trust signals.`,
-    url: `${BASE_URL}/data/${domain}`,
+    name: `${normalizedDomain} Website Intelligence Report`,
+    description: `Comprehensive website analysis for ${normalizedDomain} including traffic estimates, SEO metrics, technology stack, and trust signals.`,
+    url: toAbsoluteUrl(`/data/${normalizedDomain}`),
     creator: {
       '@type': 'Organization',
       name: 'SiteJSON',
@@ -243,11 +259,6 @@ export function generateSoftwareApplicationJsonLd(): JsonLdSoftwareApplication {
       price: '0',
       priceCurrency: 'USD',
     },
-    aggregateRating: {
-      '@type': 'AggregateRating',
-      ratingValue: '4.8',
-      ratingCount: '127',
-    },
   };
 }
 
@@ -256,12 +267,13 @@ export function generateSoftwareApplicationJsonLd(): JsonLdSoftwareApplication {
  * This is the recommended approach for multiple schemas on one page
  */
 export function combineJsonLd(objects: unknown[]): string {
-  if (objects.length === 1) {
-    return JSON.stringify(objects[0]);
+  const validObjects = objects.filter((item) => item != null);
+  if (validObjects.length === 1) {
+    return JSON.stringify(validObjects[0]);
   }
   return JSON.stringify({
     '@context': 'https://schema.org',
-    '@graph': objects,
+    '@graph': validObjects,
   });
 }
 
@@ -318,18 +330,19 @@ export function generateDataPageJsonLd({
   updatedAt?: string;
   subPage?: 'traffic' | 'seo' | 'tech' | 'business';
 }): string {
-  const path = subPage ? `/data/${domain}/${subPage}` : `/data/${domain}`;
+  const normalizedDomain = normalizeDomainInput(domain);
+  const path = subPage ? `/data/${normalizedDomain}/${subPage}` : `/data/${normalizedDomain}`;
 
   const webpage = generateWebPageJsonLd(
-    `${domain} Website Intelligence Report`,
-    `Analyze ${domain} with SEO, infrastructure, monetization, and trust signals.`,
+    `${normalizedDomain} Website Intelligence Report`,
+    `Analyze ${normalizedDomain} with SEO, infrastructure, monetization, and trust signals.`,
     path,
     updatedAt
   );
 
   const breadcrumbItems: Array<{ name: string; path?: string }> = [
     { name: 'Home', path: '/' },
-    { name: domain, path: `/data/${domain}` },
+    { name: normalizedDomain, path: `/data/${normalizedDomain}` },
   ];
 
   if (subPage) {
@@ -339,7 +352,7 @@ export function generateDataPageJsonLd({
   }
 
   const breadcrumb = generateBreadcrumbJsonLd(breadcrumbItems);
-  const dataset = generateDatasetJsonLd(domain, report);
+  const dataset = generateDatasetJsonLd(normalizedDomain, report);
 
   return combineJsonLd([webpage, breadcrumb, dataset]);
 }
@@ -354,20 +367,22 @@ export function generateDirectoryPageJsonLd({
   type: string;
   slug: string;
 }): string {
-  const path = `/directory/${type}/${slug}`;
-  const displayType = type.charAt(0).toUpperCase() + type.slice(1);
-  const displaySlug = slug.charAt(0).toUpperCase() + slug.slice(1);
+  const normalizedType = type.trim().toLowerCase();
+  const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
+  const path = `/directory/${normalizedType}/${normalizedSlug}`;
+  const displayType = toDisplayLabel(normalizedType);
+  const displaySlug = toDisplayLabel(normalizedSlug);
 
   const webpage = generateWebPageJsonLd(
     `Top ${displaySlug} Websites — ${displayType} Directory`,
-    `Discover the most popular websites ${type === 'technology' ? 'built with' : 'in'} ${displaySlug}. Ranked by traffic, authority, and AI analysis.`,
+    `Discover the most popular websites ${normalizedType === 'technology' ? 'built with' : 'in'} ${displaySlug}. Ranked by traffic, authority, and AI analysis.`,
     path
   );
 
   const breadcrumb = generateBreadcrumbJsonLd([
     { name: 'Home', path: '/' },
     { name: 'Directory', path: '/directory' },
-    { name: displayType, path: `/directory/${type}` },
+    { name: displayType, path: `/directory/${normalizedType}` },
     { name: displaySlug },
   ]);
 

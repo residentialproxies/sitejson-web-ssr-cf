@@ -19,6 +19,12 @@ interface DirectoryContentProps {
   pageSize: number;
 }
 
+const toDisplayLabel = (input: string): string => input
+  .split('-')
+  .filter(Boolean)
+  .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+  .join(' ');
+
 export default function DirectoryContent({
   mode,
   value,
@@ -42,7 +48,7 @@ export default function DirectoryContent({
     icon = <Tag className="w-6 h-6 text-emerald-500" />;
   }
 
-  const displayValue = value.charAt(0).toUpperCase() + value.slice(1);
+  const displayValue = toDisplayLabel(value);
   const canGoPrev = useMemo(() => page > 1, [page]);
   const canGoNext = useMemo(() => totalPages > 0 && page < totalPages, [page, totalPages]);
 
@@ -77,7 +83,9 @@ export default function DirectoryContent({
           <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
             <Link href="/" className="hover:text-slate-900">Home</Link>
             <ChevronRight size={14} />
-            <span className="capitalize">{type}</span>
+            <Link href="/directory" className="hover:text-slate-900">Directory</Link>
+            <ChevronRight size={14} />
+            <Link href={`/directory/${type}`} className="capitalize hover:text-slate-900">{type}</Link>
             <ChevronRight size={14} />
             <span className="text-slate-900 font-medium">{displayValue}</span>
           </nav>

@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { IBM_Plex_Mono, IBM_Plex_Sans, Newsreader } from 'next/font/google';
 import { buildBaseMetadata } from '@/lib/seo/metadata';
 import {
   generateWebSiteJsonLd,
@@ -8,6 +9,27 @@ import {
 } from '@/lib/seo/json-ld';
 import { UiShell } from './ui-shell';
 import './globals.css';
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  weight: ['400', '500'],
+  display: 'swap',
+  variable: '--font-mono',
+});
+
+const newsreader = Newsreader({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-serif',
+});
 
 export const metadata: Metadata = buildBaseMetadata();
 
@@ -44,7 +66,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
         <link rel="dns-prefetch" href="https://image.thum.io" />
         <link rel="dns-prefetch" href="https://imagedelivery.net" />
       </head>
-      <body className="font-sans antialiased">
+      <body
+        className={`${ibmPlexSans.variable} ${ibmPlexMono.variable} ${newsreader.variable} font-sans antialiased`}
+      >
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-white focus:text-ink-900 focus:rounded-lg focus:shadow-lg"

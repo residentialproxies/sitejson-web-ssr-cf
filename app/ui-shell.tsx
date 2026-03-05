@@ -10,7 +10,7 @@ export const UiShell = ({ children }: UiShellProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-white text-slate-950">
       <Navbar />
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">{children}</main>
 
       <footer className="border-t border-slate-200 py-8 bg-slate-50">
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
@@ -25,8 +25,11 @@ export const UiShell = ({ children }: UiShellProps) => {
             <div>
               <h4 className="font-bold text-slate-900 mb-4">Resources</h4>
               <ul className="space-y-2 text-sm text-slate-500">
-                <li><Link href="/directory/category/technology" className="hover:text-slate-900">Directory</Link></li>
-                <li><Link href="/directory/technology/react" className="hover:text-slate-900">Tech Stack Index</Link></li>
+                <li><Link href="/directory" className="hover:text-slate-900">Directory Hub</Link></li>
+                <li><Link href="/directory/category/technology" className="hover:text-slate-900">Category Index</Link></li>
+                <li><Link href="/directory/technology/react" className="hover:text-slate-900">Technology Index</Link></li>
+                <li><Link href="/directory/topic/finance" className="hover:text-slate-900">Topic Index</Link></li>
+                <li><Link href="/rss.xml" className="hover:text-slate-900">RSS Feed</Link></li>
               </ul>
             </div>
             <div>

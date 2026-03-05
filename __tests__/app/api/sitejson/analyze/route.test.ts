@@ -24,7 +24,7 @@ describe('POST /api/sitejson/analyze', () => {
 
     const response = await POST(request);
 
-    expect(rateLimitedProxy).toHaveBeenCalledWith(request, '/api/v1/analyze', {
+    expect(rateLimitedProxy).toHaveBeenCalledWith(request, '/api/v1/sites/analyze', {
       method: 'POST',
       body: '{"domain":"example.com"}',
       headers: {

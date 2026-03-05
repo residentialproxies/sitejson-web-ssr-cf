@@ -1,18 +1,14 @@
 import React from 'react';
 import {
-  Globe,
   Search,
   Server,
   BarChart3,
   FileText,
   Bot,
-  Mail,
-  Phone,
   Megaphone,
   DollarSign,
   Palette,
   BookOpen,
-  Zap,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport } from '@/lib/api-client/client';
@@ -40,76 +36,21 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
   const ai = report.aiAnalysis;
   const radar = report.radar;
   const files = report.files;
-  const score = report.score;
   const ads = report.ads;
   const publisher = report.publisher;
   const visual = report.visual;
   const taxonomy = report.taxonomy;
-  const contacts = seo?.contacts;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {/* SEO Card */}
       {seo && (
         <DataCard title="SEO Overview" icon={<Search className="w-4 h-4 text-gray-500" />}>
-          {score?.value != null && (
-            <DataRow label="Site Score" value={<ScoreBadge score={score.value} />} />
-          )}
           <DataRow label="H1 Tags" value={seo.h1Count ?? 0} />
           <DataRow label="H2 Tags" value={seo.h2Count ?? 0} />
           <DataRow label="Internal Links" value={seo.internalLinks ?? 0} />
           <DataRow label="External Links" value={seo.externalLinks ?? 0} />
           <DataRow label="Images" value={seo.imagesCount ?? 0} />
-        </DataCard>
-      )}
-
-      {/* Contacts Card */}
-      {contacts && (contacts.emails?.length || contacts.phones?.length || contacts.socialLinks?.length) && (
-        <DataCard title="Contacts" icon={<Mail className="w-4 h-4 text-gray-500" />}>
-          {contacts.emails && contacts.emails.length > 0 && (
-            <div className="py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
-                <Mail className="w-3 h-3" /> Emails
-              </span>
-              <div className="flex flex-col gap-1">
-                {contacts.emails.map((email) => (
-                  <span key={email} className="text-sm text-gray-900 font-mono text-xs">{email}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {contacts.phones && contacts.phones.length > 0 && (
-            <div className="py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
-                <Phone className="w-3 h-3" /> Phones
-              </span>
-              <div className="flex flex-col gap-1">
-                {contacts.phones.map((phone) => (
-                  <span key={phone} className="text-sm text-gray-900">{phone}</span>
-                ))}
-              </div>
-            </div>
-          )}
-          {contacts.socialLinks && contacts.socialLinks.length > 0 && (
-            <div className="py-2">
-              <span className="text-sm text-gray-500 flex items-center gap-1 mb-1">
-                <Globe className="w-3 h-3" /> Social Links
-              </span>
-              <div className="flex flex-col gap-1">
-                {contacts.socialLinks.map((link) => (
-                  <a
-                    key={link}
-                    href={link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-blue-600 hover:underline truncate block"
-                  >
-                    {link}
-                  </a>
-                ))}
-              </div>
-            </div>
-          )}
         </DataCard>
       )}
 
@@ -257,18 +198,6 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
               }
             />
           )}
-        </DataCard>
-      )}
-
-      {/* Score Signals */}
-      {score?.signals && score.signals.length > 0 && (
-        <DataCard title="Score Signals" icon={<Zap className="w-4 h-4 text-gray-500" />}>
-          {score.value != null && (
-            <DataRow label="Overall Score" value={<ScoreBadge score={score.value} />} />
-          )}
-          <div className="pt-2">
-            <TagList tags={score.signals} variant="outline" />
-          </div>
         </DataCard>
       )}
 

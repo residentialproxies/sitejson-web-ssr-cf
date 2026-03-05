@@ -1,7 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import {
-  Search,
   FileText,
   Bot,
   CheckCircle2,
@@ -9,10 +8,6 @@ import {
   AlertCircle,
   Link as LinkIcon,
   Heading1,
-  Mail,
-  Phone,
-  Globe,
-  Sparkles,
   Layers,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
@@ -64,22 +59,6 @@ function ChecklistItem({ label, status, description }: ChecklistItemProps) {
   );
 }
 
-function formatSignal(signal: string): string {
-  return signal.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
-function isPositiveSignal(signal: string): boolean {
-  return signal.startsWith('has_') || signal === 'ai_professional';
-}
-
-function getDomainFromUrl(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, '');
-  } catch {
-    return url;
-  }
-}
-
 export default async function SeoPage({ params }: SeoPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
@@ -88,88 +67,12 @@ export default async function SeoPage({ params }: SeoPageProps) {
   const { report } = result;
   const seo = report.seo;
   const files = report.files;
-  const score = report.score;
   const ai = report.aiAnalysis;
-  const contacts = seo?.contacts;
   const taxonomy = report.taxonomy;
   const h1Count = seo?.h1Count ?? 0;
 
   return (
     <div className="space-y-6">
-      {/* Score Overview */}
-      {score?.value != null && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Search className="w-5 h-5 text-gray-500" />
-            Site Score
-          </h2>
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-6">
-              <div className="flex-shrink-0">
-                <div
-                  className={cn(
-                    'w-24 h-24 rounded-full border-4 flex items-center justify-center',
-                    score.value >= 70
-                      ? 'border-emerald-500 bg-emerald-50'
-                      : score.value >= 40
-                        ? 'border-amber-500 bg-amber-50'
-                        : 'border-red-500 bg-red-50',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'text-3xl font-bold',
-                      score.value >= 70
-                        ? 'text-emerald-600'
-                        : score.value >= 40
-                          ? 'text-amber-600'
-                          : 'text-red-600',
-                    )}
-                  >
-                    {score.value}
-                  </span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-medium text-gray-900 mb-1">
-                  {score.value >= 70 ? 'Good' : score.value >= 40 ? 'Needs Improvement' : 'Poor'} SEO Health
-                </h3>
-                <p className="text-sm text-gray-500">
-                  Based on heading structure, link distribution, and technical files analysis.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Score Signals */}
-      {score?.signals && score.signals.length > 0 && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-gray-500" />
-            Score Signals
-          </h2>
-          <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-            <div className="flex flex-wrap gap-1.5">
-              {score.signals.map((signal) => (
-                <span
-                  key={signal}
-                  className={cn(
-                    'inline-flex items-center px-2 py-0.5 rounded text-xs font-medium border',
-                    isPositiveSignal(signal)
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border-amber-200',
-                  )}
-                >
-                  {formatSignal(signal)}
-                </span>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* Heading & Links */}
       {seo && (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -196,64 +99,6 @@ export default async function SeoPage({ params }: SeoPageProps) {
               />
             )}
           </DataCard>
-        </section>
-      )}
-
-      {/* Contact Information */}
-      {contacts && (contacts.emails?.length || contacts.phones?.length || contacts.socialLinks?.length) && (
-        <section>
-          <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <Mail className="w-5 h-5 text-gray-500" />
-            Contact Information
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {contacts.emails && contacts.emails.length > 0 && (
-              <DataCard title="Email Addresses" icon={<Mail className="w-4 h-4 text-gray-500" />}>
-                {contacts.emails.map((email) => (
-                  <div key={email} className="py-2 border-b border-gray-100 last:border-0">
-                    <a
-                      href={`mailto:${email}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {email}
-                    </a>
-                  </div>
-                ))}
-              </DataCard>
-            )}
-
-            {contacts.phones && contacts.phones.length > 0 && (
-              <DataCard title="Phone Numbers" icon={<Phone className="w-4 h-4 text-gray-500" />}>
-                {contacts.phones.map((phone) => (
-                  <div key={phone} className="py-2 border-b border-gray-100 last:border-0">
-                    <a
-                      href={`tel:${phone}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {phone}
-                    </a>
-                  </div>
-                ))}
-              </DataCard>
-            )}
-
-            {contacts.socialLinks && contacts.socialLinks.length > 0 && (
-              <DataCard title="Social Links" icon={<Globe className="w-4 h-4 text-gray-500" />}>
-                {contacts.socialLinks.map((url) => (
-                  <div key={url} className="py-2 border-b border-gray-100 last:border-0">
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      {getDomainFromUrl(url)}
-                    </a>
-                  </div>
-                ))}
-              </DataCard>
-            )}
-          </div>
         </section>
       )}
 

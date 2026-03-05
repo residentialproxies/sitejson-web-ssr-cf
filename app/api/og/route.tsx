@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const domain = searchParams.get('domain');
-    const score = searchParams.get('score');
 
     if (!domain) {
       // Return default OG image
@@ -78,7 +77,7 @@ export async function GET(request: NextRequest) {
                 marginTop: '24px',
               }}
             >
-              Traffic • SEO • Tech Stack • Trust Score
+              Traffic • SEO • Tech Stack • Business Signals
             </div>
           </div>
         ),
@@ -88,16 +87,6 @@ export async function GET(request: NextRequest) {
         }
       );
     }
-
-    // Domain-specific OG image
-    const scoreValue = score ? parseInt(score, 10) : null;
-    const scoreColor = scoreValue
-      ? scoreValue >= 70
-        ? '#10b981'
-        : scoreValue >= 40
-          ? '#f59e0b'
-          : '#ef4444'
-      : '#64748b';
 
     return new ImageResponse(
       (
@@ -178,22 +167,6 @@ export async function GET(request: NextRequest) {
             </div>
 
             <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-              {scoreValue && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      borderRadius: '50%',
-                      backgroundColor: scoreColor,
-                    }}
-                  />
-                  <div style={{ fontSize: '20px', color: '#475569' }}>
-                    Trust Score: <span style={{ fontWeight: 'bold', color: scoreColor }}>{scoreValue}/100</span>
-                  </div>
-                </div>
-              )}
-
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <div
                   style={{

@@ -1,5 +1,4 @@
 import { describe, it, expect } from 'vitest';
-import type { Metadata } from 'next';
 import {
   buildBaseMetadata,
   buildReportMetadata,
@@ -101,13 +100,28 @@ describe('buildReportMetadata', () => {
     expect(metadata.description).toContain('Comprehensive analysis');
   });
 
-  it('should include score and traffic data when provided', () => {
+  it('should include traffic data when provided', () => {
     const domain = 'example.com';
-    const data = { score: 85, traffic: 5000000 };
+    const data = { traffic: 5000000 };
     const metadata = buildReportMetadata(domain, data);
 
-    expect(metadata.description).toContain('trust score 85');
     expect(metadata.description).toContain('5.0M monthly visits');
+  });
+
+  it('normalizes domain casing and spaces for canonical metadata fields', () => {
+    const metadata = buildReportMetadata(' Example.COM ');
+
+    expect(metadata.title).toBe('example.com Website Intelligence Report');
+    expect(metadata.alternates?.canonical).toBe('/data/example.com');
+    expect(metadata.openGraph?.url).toBe('/data/example.com');
+  });
+
+  it('normalizes protocol/path domain input for canonical metadata fields', () => {
+    const metadata = buildReportMetadata(' https://Blog.SiteJson.com/path ');
+
+    expect(metadata.title).toBe('blog.sitejson.com Website Intelligence Report');
+    expect(metadata.alternates?.canonical).toBe('/data/blog.sitejson.com');
+    expect(metadata.openGraph?.url).toBe('/data/blog.sitejson.com');
   });
 
   it('should have correct canonical URL', () => {
@@ -170,14 +184,26 @@ describe('buildSitePageMetadata', () => {
       canonical: '/data/test.com',
     });
   });
+
+  it('normalizes incoming domain for canonical page target', () => {
+    const metadata = buildSitePageMetadata(' EXAMPLE.COM ');
+    expect(metadata.alternates?.canonical).toBe('/data/example.com');
+    expect(metadata.title).toBe('Analyzing example.com');
+  });
+
+  it('normalizes protocol/path domain input for site analysis metadata', () => {
+    const metadata = buildSitePageMetadata(' https://Example.com/path ');
+    expect(metadata.alternates?.canonical).toBe('/data/example.com');
+    expect(metadata.title).toBe('Analyzing example.com');
+  });
 });
 
 describe('buildDataSubPageMetadata', () => {
   const testCases: Array<{ subPage: 'traffic' | 'seo' | 'tech' | 'business'; expectedTitle: string }> = [
     { subPage: 'traffic', expectedTitle: 'Traffic Statistics & Analytics' },
-    { subPage: 'seo', expectedTitle: 'SEO Analysis & Score' },
+    { subPage: 'seo', expectedTitle: 'SEO Analysis & Structure' },
     { subPage: 'tech', expectedTitle: 'Technology Stack & Infrastructure' },
-    { subPage: 'business', expectedTitle: 'Business Intelligence & Trust' },
+    { subPage: 'business', expectedTitle: 'Business Intelligence' },
   ];
 
   testCases.forEach(({ subPage, expectedTitle }) => {
@@ -211,7 +237,7 @@ describe('buildDataSubPageMetadata', () => {
 
     expect(metadata.twitter).toMatchObject({
       card: 'summary_large_image',
-      title: 'example.com SEO Analysis & Score | SiteJSON',
+      title: 'example.com SEO Analysis & Structure | SiteJSON',
     });
     expect(metadata.twitter).toHaveProperty('images');
   });
@@ -225,6 +251,12 @@ describe('buildDataSubPageMetadata', () => {
       expect(metadata.openGraph).toHaveProperty('images');
       expect(metadata.twitter).toHaveProperty('images');
     });
+  });
+
+  it('normalizes protocol/path input for data subpage canonical URLs', () => {
+    const metadata = buildDataSubPageMetadata(' HTTPS://Example.com/path ', 'seo');
+    expect(metadata.alternates?.canonical).toBe('/data/example.com/seo');
+    expect(metadata.openGraph?.url).toBe('/data/example.com/seo');
   });
 });
 
@@ -255,6 +287,14 @@ describe('buildDirectoryMetadata', () => {
     expect(metadata.alternates).toEqual({
       canonical: '/directory/technology/react',
     });
+  });
+
+  it('normalizes non-canonical slug input for consistent canonical URL', () => {
+    const metadata = buildDirectoryMetadata('technology', 'Next.js');
+
+    expect(metadata.title).toBe('Top Nextjs Websites — Technology Directory');
+    expect(metadata.alternates?.canonical).toBe('/directory/technology/nextjs');
+    expect(metadata.openGraph?.url).toBe('/directory/technology/nextjs');
   });
 
   it('should have correct OpenGraph configuration', () => {

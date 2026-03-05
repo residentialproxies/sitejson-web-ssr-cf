@@ -126,36 +126,37 @@ npm run build:cf
 
 ## Testing
 
-### Unit Tests
-
-Unit tests are written with Vitest and React Testing Library:
+Vitest + React Testing Library. All tests in `__tests__/`.
 
 ```bash
-# Run all tests
-npm run test
-
-# Run with coverage
-npm run test:coverage
-
-# Run in watch mode
-npm run test:watch
+npm run test           # single pass (176 tests)
+npm run test:watch     # watch mode
+npm run test:coverage  # with coverage report
+npm run typecheck      # tsc --noEmit
+npm run lint           # next lint
 ```
 
-Test files are located in `__tests__/` directories alongside the code they test.
+| Suite | Tests | Location |
+|-------|-------|----------|
+| SEO Metadata | 36 | `__tests__/lib/seo/metadata.test.ts` |
+| JSON-LD Structured Data | 24 | `__tests__/lib/seo/json-ld.test.ts` |
+| API Client | 18 | `__tests__/lib/api-client/client.test.ts` |
+| Utilities | 25 | `__tests__/lib/utils.test.ts` |
+| UI Components | 45 | `__tests__/components/ui/` |
+| BFF API Routes | 8 | `__tests__/app/api/sitejson/` |
+| Directory Routes | 7 | `__tests__/app/directory/` |
+| Data Pages | 7 | `__tests__/app/data/` |
+| SEO Routes (`robots` + `sitemap`) | 4 | `__tests__/app/seo/` |
+| Hooks | 1 | `__tests__/hooks/use-site-poll.test.tsx` |
+| RSS | 1 | `__tests__/app/rss/` |
+| **Total** | **176** | |
 
-### E2E Tests
-
-E2E tests are written with Playwright:
+### E2E Tests (Playwright)
 
 ```bash
-# Run all E2E tests
-npm run e2e
-
-# Run with UI
-npm run e2e:ui
-
-# Debug mode
-npm run e2e:debug
+npm run e2e            # headless
+npm run e2e:ui         # interactive
+npm run e2e:debug      # step-through
 ```
 
 ## Deployment

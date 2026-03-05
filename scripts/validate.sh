@@ -1,13 +1,24 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
-# SiteJSON Web SSR Pre-deployment Validation Script
-# Usage: ./scripts/validate.sh
+# SiteJSON Web SSR pre-deployment validation script.
+# Usage:
+#   ./scripts/validate.sh [--ci] [--skip-lint] [--skip-typecheck] [--skip-tests] [--skip-build] [--skip-security]
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Colors for output
+SKIP_LINT=0
+SKIP_TYPECHECK=0
+SKIP_TESTS=0
+SKIP_BUILD=0
+SKIP_SECURITY=0
+CHECK_CLOUDFLARE_AUTH=0
+CI_MODE=0
+
+ERRORS=0
+WARNINGS=0
+
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -19,220 +30,282 @@ log_success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-ERRORS=0
-WARNINGS=0
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/validate.sh [options]
+
+Options:
+  --ci                    CI-friendly mode (non-interactive warnings only).
+  --check-cloudflare-auth Verify wrangler auth using `wrangler whoami`.
+  --skip-lint             Skip npm run lint.
+  --skip-typecheck        Skip npm run typecheck.
+  --skip-tests            Skip npm run test.
+  --skip-build            Skip npm run build:cf.
+  --skip-security         Skip hardcoded-secret pattern scan.
+  -h, --help              Show this help.
+EOF
+}
 
 error_count() {
-    log_error "$1"
-    ((ERRORS++)) || true
+  log_error "$1"
+  ERRORS=$((ERRORS + 1))
 }
 
 warn_count() {
-    log_warn "$1"
-    ((WARNINGS++)) || true
+  log_warn "$1"
+  WARNINGS=$((WARNINGS + 1))
 }
 
-# Check Node.js version
+require_command() {
+  local cmd="$1"
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    error_count "Required command not found: $cmd"
+    return 1
+  fi
+  return 0
+}
+
 check_node_version() {
-    log_info "Checking Node.js version..."
+  if ! require_command node; then
+    return 0
+  fi
 
-    local node_version
-    node_version=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
-
-    if [ "$node_version" -lt 18 ]; then
-        error_count "Node.js 18+ required, found $(node --version)"
-    else
-        log_success "Node.js version OK ($(node --version))"
-    fi
+  local major
+  major="$(node -p "process.versions.node.split('.')[0]")"
+  if [[ "$major" -lt 20 ]]; then
+    error_count "Node.js 20+ required. Found: $(node --version)"
+  else
+    log_success "Node.js version OK ($(node --version))"
+  fi
 }
 
-# Check for required files
+has_any_file() {
+  local label="$1"
+  shift
+
+  local found=0
+  local candidate
+  for candidate in "$@"; do
+    if [[ -f "${PROJECT_ROOT}/${candidate}" ]]; then
+      found=1
+      break
+    fi
+  done
+
+  if [[ "$found" -eq 0 ]]; then
+    error_count "Missing required ${label}. Expected one of: $*"
+  fi
+}
+
 check_required_files() {
-    log_info "Checking required files..."
+  log_info "Checking required files..."
 
-    local required_files=(
-        "package.json"
-        "tsconfig.json"
-        "next.config.js"
-        "tailwind.config.ts"
-        "vitest.config.ts"
-        "playwright.config.ts"
-        "wrangler.toml"
-    )
+  has_any_file "package manifest" "package.json"
+  has_any_file "typescript config" "tsconfig.json"
+  has_any_file "next config" "next.config.ts" "next.config.js" "next.config.mjs"
+  has_any_file "tailwind config" "tailwind.config.js" "tailwind.config.ts" "tailwind.config.cjs"
+  has_any_file "vitest config" "vitest.config.ts" "vitest.config.js"
+  has_any_file "playwright config" "playwright.config.ts" "playwright.config.js"
+  has_any_file "wrangler config" "wrangler.toml" "wrangler.toml.example"
 
-    for file in "${required_files[@]}"; do
-        if [ ! -f "$PROJECT_ROOT/$file" ]; then
-            error_count "Missing required file: $file"
-        fi
-    done
-
-    if [ $ERRORS -eq 0 ]; then
-        log_success "All required files present"
-    fi
+  if [[ "$ERRORS" -eq 0 ]]; then
+    log_success "Required file checks passed"
+  fi
 }
 
-# Check environment variables
-check_env_vars() {
-    log_info "Checking environment variables..."
+check_environment_files() {
+  log_info "Checking environment templates..."
 
-    if [ ! -f "$PROJECT_ROOT/.env.local" ] && [ ! -f "$PROJECT_ROOT/.env" ]; then
-        warn_count "No .env.local or .env file found"
-    fi
+  if [[ ! -f "${PROJECT_ROOT}/.env.example" ]]; then
+    warn_count "Missing .env.example template"
+  else
+    log_success ".env.example present"
+  fi
 
-    # Check for example env
-    if [ ! -f "$PROJECT_ROOT/.env.example" ]; then
-        warn_count "No .env.example file found"
-    fi
-}
-
-# Run linting
-run_lint() {
-    log_info "Running ESLint..."
-
-    cd "$PROJECT_ROOT"
-
-    if npm run lint 2>/dev/null; then
-        log_success "Linting passed"
+  if [[ ! -f "${PROJECT_ROOT}/.env.local" && ! -f "${PROJECT_ROOT}/.env" ]]; then
+    if [[ "$CI_MODE" -eq 1 ]]; then
+      log_info "No local .env/.env.local file (expected in CI)"
     else
-        error_count "Linting failed"
+      warn_count "No .env.local or .env found. Local commands may fail."
     fi
+  fi
 }
 
-# Run type checking
-run_typecheck() {
-    log_info "Running TypeScript type check..."
+check_dependencies_installed() {
+  log_info "Checking dependencies..."
+  if [[ ! -d "${PROJECT_ROOT}/node_modules" ]]; then
+    error_count "node_modules missing. Run 'npm ci' before validation."
+  else
+    log_success "node_modules directory present"
+  fi
+}
 
+run_step() {
+  local label="$1"
+  shift
+
+  log_info "$label..."
+  if (cd "$PROJECT_ROOT" && "$@"); then
+    log_success "$label passed"
+  else
+    error_count "$label failed"
+  fi
+}
+
+check_build_output_size() {
+  if [[ ! -d "${PROJECT_ROOT}/.vercel/output/static" ]]; then
+    warn_count "Build output missing (.vercel/output/static)"
+    return 0
+  fi
+
+  local size_mb
+  size_mb="$(du -sm "${PROJECT_ROOT}/.vercel/output/static" | awk '{print $1}')"
+  if [[ "$size_mb" -gt 120 ]]; then
+    warn_count "Build output is ${size_mb}MB (>120MB threshold)"
+  else
+    log_success "Build output size OK (${size_mb}MB)"
+  fi
+}
+
+check_security_patterns() {
+  if [[ "$SKIP_SECURITY" -eq 1 ]]; then
+    log_warn "Skipping security pattern scan (--skip-security)."
+    return 0
+  fi
+
+  require_command rg || return 0
+
+  log_info "Scanning for potential hardcoded secrets (file paths only)..."
+  local matches
+  matches="$(
     cd "$PROJECT_ROOT"
+    rg -l --hidden \
+      --glob '!node_modules/**' \
+      --glob '!coverage/**' \
+      --glob '!.next/**' \
+      --glob '!dist/**' \
+      --glob '!**/*.md' \
+      --glob '!**/*.test.*' \
+      --glob '!**/__tests__/**' \
+      '(?i)(api[_-]?key|secret|token|password)\s*[:=]\s*["'\''][^"'\'']{8,}["'\'']' \
+      app components lib screens scripts 2>/dev/null || true
+  )"
 
-    if npm run typecheck 2>/dev/null; then
-        log_success "Type checking passed"
-    else
-        error_count "Type checking failed"
-    fi
+  if [[ -n "$matches" ]]; then
+    warn_count "Potential hardcoded secret patterns found:"
+    echo "$matches" | sed 's/^/  - /'
+  else
+    log_success "No obvious hardcoded secret patterns detected"
+  fi
 }
 
-# Run unit tests
-run_unit_tests() {
-    log_info "Running unit tests..."
+check_cloudflare_auth() {
+  if [[ "$CHECK_CLOUDFLARE_AUTH" -eq 0 ]]; then
+    return 0
+  fi
 
-    cd "$PROJECT_ROOT"
-
-    if npm run test 2>/dev/null; then
-        log_success "Unit tests passed"
-    else
-        error_count "Unit tests failed"
-    fi
+  run_step "Cloudflare auth check (wrangler whoami)" npx wrangler whoami
 }
 
-# Check test coverage
-check_coverage() {
-    log_info "Checking test coverage..."
-
-    cd "$PROJECT_ROOT"
-
-    if [ -d "coverage" ]; then
-        local coverage_file="$PROJECT_ROOT/coverage/coverage-summary.json"
-        if [ -f "$coverage_file" ]; then
-            local lines_pct
-            lines_pct=$(grep -o '"lines":{"total":[0-9]*,"covered":[0-9]*,"skipped":[0-9]*,"pct":[0-9.]*}' "$coverage_file" | grep -o '"pct":[0-9.]*' | cut -d':' -f2)
-
-            if (( $(echo "$lines_pct < 80" | bc -l) )); then
-                warn_count "Code coverage is ${lines_pct}% (target: 80%)"
-            else
-                log_success "Code coverage OK (${lines_pct}%)"
-            fi
-        fi
-    else
-        warn_count "No coverage report found"
-    fi
-}
-
-# Check for security issues
-check_security() {
-    log_info "Checking for security issues..."
-
-    cd "$PROJECT_ROOT"
-
-    # Check for common secrets in code
-    local secrets_pattern='(password|secret|key|token|api_key)\s*=\s*["\'][^"\']+["\']'
-    if grep -rE "$secrets_pattern" --include="*.ts" --include="*.tsx" --include="*.js" "$PROJECT_ROOT/src" "$PROJECT_ROOT/lib" "$PROJECT_ROOT/app" 2>/dev/null | grep -v "\.env" | grep -v "process.env"; then
-        warn_count "Potential hardcoded secrets found"
-    fi
-
-    log_success "Security check completed"
-}
-
-# Check build output size
-check_build_size() {
-    log_info "Checking build output..."
-
-    if [ -d "$PROJECT_ROOT/.vercel/output/static" ]; then
-        local build_size
-        build_size=$(du -sm "$PROJECT_ROOT/.vercel/output/static" | cut -f1)
-
-        if [ "$build_size" -gt 100 ]; then
-            warn_count "Build size is ${build_size}MB (consider optimization)"
-        else
-            log_success "Build size OK (${build_size}MB)"
-        fi
-    else
-        warn_count "No build output found. Run 'npm run build:cf' first."
-    fi
-}
-
-# Check for outdated dependencies
-check_outdated_deps() {
-    log_info "Checking for outdated dependencies..."
-
-    cd "$PROJECT_ROOT"
-
-    local outdated
-    outdated=$(npm outdated --json 2>/dev/null || echo "{}")
-
-    if [ "$outdated" != "{}" ]; then
-        warn_count "Outdated dependencies found. Run 'npm outdated' for details."
-    else
-        log_success "All dependencies up to date"
-    fi
-}
-
-# Summary
 print_summary() {
-    echo ""
-    echo "========================================"
-    echo "Validation Summary"
-    echo "========================================"
+  echo ""
+  echo "========================================"
+  echo "Validation Summary"
+  echo "========================================"
 
-    if [ $ERRORS -eq 0 ] && [ $WARNINGS -eq 0 ]; then
-        log_success "All checks passed!"
-        return 0
-    elif [ $ERRORS -eq 0 ]; then
-        log_warn "Validation completed with $WARNINGS warning(s)"
-        return 0
-    else
-        log_error "Validation failed with $ERRORS error(s) and $WARNINGS warning(s)"
-        return 1
-    fi
+  if [[ "$ERRORS" -eq 0 && "$WARNINGS" -eq 0 ]]; then
+    log_success "All checks passed"
+    return 0
+  fi
+
+  if [[ "$ERRORS" -eq 0 ]]; then
+    log_warn "Validation passed with ${WARNINGS} warning(s)"
+    return 0
+  fi
+
+  log_error "Validation failed with ${ERRORS} error(s) and ${WARNINGS} warning(s)"
+  return 1
 }
 
-# Main validation flow
 main() {
-    log_info "Starting pre-deployment validation..."
-    log_info "Project root: $PROJECT_ROOT"
-    echo ""
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --ci)
+        CI_MODE=1
+        shift
+        ;;
+      --check-cloudflare-auth)
+        CHECK_CLOUDFLARE_AUTH=1
+        shift
+        ;;
+      --skip-lint)
+        SKIP_LINT=1
+        shift
+        ;;
+      --skip-typecheck)
+        SKIP_TYPECHECK=1
+        shift
+        ;;
+      --skip-tests)
+        SKIP_TESTS=1
+        shift
+        ;;
+      --skip-build)
+        SKIP_BUILD=1
+        shift
+        ;;
+      --skip-security)
+        SKIP_SECURITY=1
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      *)
+        error_count "Unknown option: $1"
+        shift
+        ;;
+    esac
+  done
 
-    check_node_version
-    check_required_files
-    check_env_vars
-    run_lint
-    run_typecheck
-    run_unit_tests
-    check_coverage
-    check_security
-    check_build_size
-    check_outdated_deps
+  log_info "Starting validation at ${PROJECT_ROOT}"
+  require_command npm || true
+  require_command npx || true
+  check_node_version
+  check_required_files
+  check_environment_files
+  check_dependencies_installed
 
-    print_summary
+  if [[ "$SKIP_LINT" -eq 0 ]]; then
+    run_step "ESLint" npm run lint
+  else
+    log_warn "Skipping lint (--skip-lint)."
+  fi
+
+  if [[ "$SKIP_TYPECHECK" -eq 0 ]]; then
+    run_step "TypeScript typecheck" npm run typecheck
+  else
+    log_warn "Skipping typecheck (--skip-typecheck)."
+  fi
+
+  if [[ "$SKIP_TESTS" -eq 0 ]]; then
+    run_step "Unit tests" npm run test
+  else
+    log_warn "Skipping tests (--skip-tests)."
+  fi
+
+  if [[ "$SKIP_BUILD" -eq 0 ]]; then
+    run_step "Cloudflare build (build:cf)" npm run build:cf
+  else
+    log_warn "Skipping build (--skip-build)."
+  fi
+
+  check_build_output_size
+  check_security_patterns
+  check_cloudflare_auth
+
+  print_summary
 }
 
 main "$@"

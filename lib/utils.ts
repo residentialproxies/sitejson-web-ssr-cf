@@ -24,6 +24,20 @@ export function normalizeDirectorySlug(value: string): string {
   return normalized;
 }
 
+/**
+ * Normalize free-form domain input into a canonical host value.
+ * Examples: " HTTPS://Example.COM/path " -> "example.com"
+ */
+export function normalizeDomainInput(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, '')
+    .replace(/\/.*$/, '')
+    .replace(/:\d+$/, '')
+    .replace(/\.+$/, '');
+}
+
 export function formatNumber(num: number): string {
   if (num >= 1000000) {
     return (num / 1000000).toFixed(1) + 'M';

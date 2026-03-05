@@ -4,6 +4,7 @@ import { PlaygroundClient } from './playground-client';
 export const metadata: Metadata = {
   title: 'API Playground - SiteJSON',
   description: 'Interactive API playground to test SiteJSON endpoints.',
+  robots: { index: false, follow: false },
 };
 
 export const runtime = 'edge';

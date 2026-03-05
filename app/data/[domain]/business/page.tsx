@@ -3,13 +3,11 @@ import type { Metadata } from 'next';
 import {
   Briefcase,
   Shield,
-  Target,
   Tag,
   Sparkles,
   Megaphone,
   DollarSign,
   Radio,
-  BarChart2,
   Palette,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
@@ -30,12 +28,6 @@ export async function generateMetadata({ params }: BusinessPageProps): Promise<M
   return buildDataSubPageMetadata(domain, 'business');
 }
 
-function formatSignal(signal: string): string {
-  return signal
-    .replace(/_/g, ' ')
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 export default async function BusinessPage({ params }: BusinessPageProps) {
   const { domain } = await params;
   const result = await getSiteReport(domain);
@@ -43,7 +35,6 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
   const { report } = result;
   const ai = report.aiAnalysis;
-  const score = report.score;
   const ads = report.ads;
   const publisher = report.publisher;
   const taxonomy = report.taxonomy;
@@ -141,15 +132,6 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
             </DataCard>
           )}
 
-          {/* Site Score */}
-          {score?.value != null && (
-            <DataCard title="Overall Site Score" icon={<Target className="w-4 h-4 text-gray-500" />}>
-              <DataRow
-                label="Score"
-                value={<ScoreBadge score={score.value} />}
-              />
-            </DataCard>
-          )}
         </div>
       </div>
 
@@ -300,29 +282,6 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               <span className="text-xs text-gray-400">Source: {taxonomy.source}</span>
             </div>
           )}
-        </DataCard>
-      )}
-
-      {/* Row 4: Score with Signals (enhanced) */}
-      {score?.value != null && score.signals && score.signals.length > 0 && (
-        <DataCard title="Score Signals" icon={<BarChart2 className="w-4 h-4 text-gray-500" />}>
-          <DataRow
-            label="Overall Score"
-            value={<ScoreBadge score={score.value} />}
-          />
-          <div className="pt-2 border-t border-gray-100 mt-2">
-            <p className="text-xs text-gray-500 mb-1.5">Contributing Signals</p>
-            <div className="flex flex-wrap gap-1.5">
-              {score.signals.map((signal) => (
-                <span
-                  key={signal}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-emerald-50 text-emerald-700 border border-emerald-200"
-                >
-                  {formatSignal(signal)}
-                </span>
-              ))}
-            </div>
-          </div>
         </DataCard>
       )}
 

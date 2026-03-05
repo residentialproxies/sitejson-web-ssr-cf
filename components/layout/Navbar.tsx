@@ -70,7 +70,6 @@ export const Navbar: React.FC = () => {
 
         <nav className="flex items-center gap-4 text-sm font-medium text-ink-600">
           <Link href="/directory/category/technology" className="hidden md:block hover:text-ink-900 transition-colors">Directory</Link>
-          <Link href="/playground" className="hidden md:block hover:text-ink-900 transition-colors">Playground</Link>
           <Link href="/#pricing" className="hidden md:block hover:text-ink-900 transition-colors">API Pricing</Link>
           <div className="h-4 w-px bg-ink-200 hidden md:block" />
 

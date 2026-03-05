@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from './_rate-limit';
 import { getSessionFromRequest } from '@/lib/auth/session';
+import { readRuntimeEnv } from '@/lib/runtime-env';
 
 const defaultTimeoutMs = 15000;
 
@@ -44,14 +45,14 @@ const parseJson = (text: string): unknown => {
 
 const getBackendBaseUrl = (): string => {
   return (
-    process.env.SITEJSON_API_BASE_URL ??
-    process.env.NEXT_PUBLIC_SITEJSON_API_BASE_URL ??
+    readRuntimeEnv('SITEJSON_API_BASE_URL') ??
+    readRuntimeEnv('NEXT_PUBLIC_SITEJSON_API_BASE_URL') ??
     'http://127.0.0.1:8787'
   );
 };
 
 const getTimeoutMs = (): number => {
-  const raw = Number(process.env.SITEJSON_PROXY_TIMEOUT_MS ?? defaultTimeoutMs);
+  const raw = Number(readRuntimeEnv('SITEJSON_PROXY_TIMEOUT_MS') ?? defaultTimeoutMs);
   if (Number.isFinite(raw) && raw > 0) {
     return raw;
   }
@@ -67,8 +68,8 @@ const createHeaders = (
 ): Headers => {
   const merged = new Headers(headers);
 
-  const apiKey = process.env.SITEJSON_API_KEY;
-  if (apiKey && apiKey.trim()) {
+  const apiKey = readRuntimeEnv('SITEJSON_API_KEY');
+  if (apiKey) {
     merged.set('x-api-key', apiKey);
   }
 
@@ -128,10 +129,18 @@ export const proxyToSitejson = async (
     };
 
     // Add cache headers based on path
-    const cacheConfig = getCacheConfig(path);
-    if (cacheConfig.sMaxAge > 0) {
-      responseHeaders['cache-control'] = `public, s-maxage=${cacheConfig.sMaxAge}, stale-while-revalidate=${cacheConfig.staleWhileRevalidate}`;
+    if (!upstream.ok) {
+      responseHeaders['cache-control'] = 'no-store, must-revalidate';
     } else {
+      const cacheConfig = getCacheConfig(path);
+      if (cacheConfig.sMaxAge > 0) {
+        responseHeaders['cache-control'] = `public, s-maxage=${cacheConfig.sMaxAge}, stale-while-revalidate=${cacheConfig.staleWhileRevalidate}`;
+      } else {
+        responseHeaders['cache-control'] = 'no-store, must-revalidate';
+      }
+    }
+
+    if (!responseHeaders['cache-control']) {
       responseHeaders['cache-control'] = 'no-store, must-revalidate';
     }
 

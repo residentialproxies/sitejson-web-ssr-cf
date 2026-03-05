@@ -102,9 +102,9 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['IBM Plex Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
-        serif: ['Newsreader', 'Georgia', 'Times New Roman', 'serif'],
-        mono: ['IBM Plex Mono', 'SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
+        sans: ['var(--font-sans)', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        serif: ['var(--font-serif)', 'Georgia', 'Times New Roman', 'serif'],
+        mono: ['var(--font-mono)', 'SF Mono', 'Monaco', 'Cascadia Code', 'monospace'],
       },
       fontSize: {
         'fluid-xs': 'var(--text-xs)',

@@ -32,13 +32,6 @@ export const SiteCard: React.FC<SiteCardProps> = ({ site }) => {
               </span>
             </div>
           )}
-          {typeof site.score === 'number' && (
-            <div className="absolute top-3 right-3">
-              <span className="bg-white/90 backdrop-blur text-slate-700 text-[10px] font-mono font-bold px-2 py-1 rounded shadow-sm border border-slate-200">
-                {site.score}/100
-              </span>
-            </div>
-          )}
         </div>
 
         <div className="p-4">

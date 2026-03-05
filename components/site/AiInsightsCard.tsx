@@ -8,7 +8,6 @@ import { cn, normalizeDirectorySlug } from '../../lib/utils';
 
 export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const ai = data.aiAnalysis;
-  const score = data.score;
   const timing = data._meta?.timing;
 
   const riskScore = ai?.risk?.score ?? 0;
@@ -31,11 +30,6 @@ export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             <Sparkles size={16} />
           </div>
           AI Intelligence
-          {score?.value != null && (
-            <Badge variant="outline" className="ml-auto text-xs font-mono">
-              Score {score.value}/100
-            </Badge>
-          )}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
@@ -76,27 +70,6 @@ export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
                   <span className="text-xs font-bold text-slate-500 uppercase">Target Audience</span>
                   <p className="text-sm text-slate-600">{ai.business.targetAudience}</p>
                 </div>
-              </div>
-            )}
-
-            {/* Score Signals */}
-            {score?.signals && score.signals.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-2">
-                {score.signals.slice(0, 6).map((signal) => {
-                  const isPositive = signal.startsWith('+');
-                  return (
-                    <Badge
-                      key={signal}
-                      variant="outline"
-                      className={cn(
-                        "text-[10px] px-1.5 py-0",
-                        isPositive ? "text-emerald-700 border-emerald-200 bg-emerald-50" : "text-rose-700 border-rose-200 bg-rose-50"
-                      )}
-                    >
-                      {signal}
-                    </Badge>
-                  );
-                })}
               </div>
             )}
 

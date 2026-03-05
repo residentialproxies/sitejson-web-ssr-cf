@@ -1,12 +1,11 @@
 import React from 'react';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Layout, FileText, Link as LinkIcon, Image as ImageIcon, CheckCircle2, XCircle, Mail, Phone, Globe } from 'lucide-react';
+import { Layout, FileText, Link as LinkIcon, Image as ImageIcon, CheckCircle2, XCircle } from 'lucide-react';
 
 export const SeoStructureCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   const seo = data.seo;
   const files = data.files;
-  const contacts = seo?.contacts;
 
   if (!seo && !files) return null;
 
@@ -40,30 +39,6 @@ export const SeoStructureCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             </div>
           </div>
         )}
-
-        {/* Contacts */}
-        {contacts && (contacts.emails?.length || contacts.phones?.length || contacts.socialLinks?.length) ? (
-          <div className="space-y-1.5">
-            {contacts.emails?.[0] && (
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <Mail size={12} className="text-slate-400 shrink-0" />
-                <span className="truncate">{contacts.emails[0]}</span>
-              </div>
-            )}
-            {contacts.phones?.[0] && (
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <Phone size={12} className="text-slate-400 shrink-0" />
-                <span>{contacts.phones[0]}</span>
-              </div>
-            )}
-            {contacts.socialLinks && contacts.socialLinks.length > 0 && (
-              <div className="flex items-center gap-2 text-xs text-slate-600">
-                <Globe size={12} className="text-slate-400 shrink-0" />
-                <span>{contacts.socialLinks.length} social link{contacts.socialLinks.length !== 1 ? 's' : ''}</span>
-              </div>
-            )}
-          </div>
-        ) : null}
 
         {/* Files Checklist */}
         {files && (

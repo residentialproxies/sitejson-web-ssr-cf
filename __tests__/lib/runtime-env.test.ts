@@ -13,7 +13,7 @@ describe('readRuntimeEnv', () => {
     clearRequestContext();
   });
 
-  it('returns process env value when available', () => {
+  it('returns process env value when context value is missing', () => {
     process.env.SITEJSON_API_KEY = 'process-key';
 
     expect(readRuntimeEnv('SITEJSON_API_KEY')).toBe('process-key');
@@ -21,6 +21,17 @@ describe('readRuntimeEnv', () => {
 
   it('falls back to Cloudflare request context binding', () => {
     delete process.env.SITEJSON_API_KEY;
+    (globalThis as Record<PropertyKey, unknown>)[requestContextSymbol] = {
+      env: {
+        SITEJSON_API_KEY: 'cf-key',
+      },
+    };
+
+    expect(readRuntimeEnv('SITEJSON_API_KEY')).toBe('cf-key');
+  });
+
+  it('prefers Cloudflare request context over process env value', () => {
+    process.env.SITEJSON_API_KEY = 'process-key';
     (globalThis as Record<PropertyKey, unknown>)[requestContextSymbol] = {
       env: {
         SITEJSON_API_KEY: 'cf-key',

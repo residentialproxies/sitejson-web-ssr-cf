@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { buildDirectoryMetadata } from '@/lib/seo/metadata';
+import { generateDirectoryPageJsonLd } from '@/lib/seo/json-ld';
 import { getDirectory } from '@/lib/api-client/client';
 import { normalizeDirectorySlug } from '@/lib/utils';
 import DirectoryContent from './directory-content';
@@ -49,28 +50,13 @@ export default async function DirectoryPage({ params }: DirectoryPageProps) {
   const total = data?.pagination?.total ?? 0;
   const pageSize = data?.pagination?.page_size ?? 24;
   const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
-
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    name: `Top Websites ${normalizedType === 'technology' ? 'using' : 'in'} ${safeSlug}`,
-    description: `Discover the most popular websites ${normalizedType === 'technology' ? 'built with' : 'related to'} ${safeSlug}.`,
-    url: `https://sitejson.com/directory/${normalizedType}/${safeSlug}`,
-    breadcrumb: {
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://sitejson.com' },
-        { '@type': 'ListItem', position: 2, name: normalizedType.charAt(0).toUpperCase() + normalizedType.slice(1) },
-        { '@type': 'ListItem', position: 3, name: safeSlug.charAt(0).toUpperCase() + safeSlug.slice(1) },
-      ],
-    },
-  };
+  const jsonLd = generateDirectoryPageJsonLd({ type: normalizedType, slug: safeSlug });
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd }}
       />
       <DirectoryContent
         mode={normalizedType}

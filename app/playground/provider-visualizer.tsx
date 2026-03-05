@@ -23,7 +23,6 @@ interface ProviderSummaryData {
   domain: string;
   updatedAt: string;
   providers: ProviderSummaryItem[];
-  score?: { value: number; signals: string[] };
   _meta?: Record<string, unknown>;
 }
 
@@ -88,7 +87,7 @@ export function ProviderSummaryView({ json }: { json: string }) {
   }
   if (!parsed.ok || !parsed.data?.providers) return null;
 
-  const { domain, updatedAt, providers, score } = parsed.data;
+  const { domain, updatedAt, providers } = parsed.data;
 
   const totalFields = providers.reduce((s, p) => s + p.completeness.total, 0);
   const totalPresent = providers.reduce((s, p) => s + p.completeness.present, 0);
@@ -103,11 +102,6 @@ export function ProviderSummaryView({ json }: { json: string }) {
           <p className="text-xs text-ink-400">Updated: {new Date(updatedAt).toLocaleString()}</p>
         </div>
         <div className="flex items-center gap-3">
-          {score && (
-            <div className={cn('px-3 py-1 rounded-full text-sm font-bold border', completenessColor(score.value / 100))}>
-              Score: {score.value}
-            </div>
-          )}
           <div className={cn('px-3 py-1 rounded-full text-sm font-bold border', completenessColor(overallRatio))}>
             {totalPresent}/{totalFields} fields
           </div>
