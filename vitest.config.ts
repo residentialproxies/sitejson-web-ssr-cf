@@ -9,13 +9,15 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./setupTests.ts'],
     include: ['**/__tests__/**/*.test.{ts,tsx}'],
-    exclude: ['node_modules', '.next', 'dist'],
+    exclude: ['node_modules', '.next', '.vercel', '.vercel/output', 'dist'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       exclude: [
         'node_modules/',
         '.next/',
+        '.vercel/',
+        '.vercel/output/',
         '**/*.d.ts',
         '**/*.config.{ts,js}',
         '**/setupTests.ts',

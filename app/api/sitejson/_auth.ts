@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getSessionFromRequest } from '@/lib/auth/session';
+import { resolveSessionFromRequest } from '@/lib/auth/session';
 
 const jsonError = (status: number, code: string, message: string) =>
   NextResponse.json(
@@ -34,8 +34,24 @@ const getBearerToken = (request: Request): string | null => {
   return match?.[1]?.trim() || null;
 };
 
+export const requireApiAccess = async (
+  request: Request,
+  sessionOverride?: Awaited<ReturnType<typeof resolveSessionFromRequest>>,
+): Promise<NextResponse | null> => {
+  const session = sessionOverride ?? (await resolveSessionFromRequest(request));
+  if (!session) {
+    return jsonError(
+      401,
+      'API_KEY_REQUIRED',
+      'Anonymous access is disabled. Sign in with GitHub to get your free API key.',
+    );
+  }
+
+  return null;
+};
+
 export const requireOpsAccess = async (request: Request): Promise<NextResponse | null> => {
-  const session = await getSessionFromRequest(request);
+  const session = await resolveSessionFromRequest(request);
   if (!session) {
     return jsonError(401, 'UNAUTHORIZED', 'Sign in is required for this endpoint.');
   }

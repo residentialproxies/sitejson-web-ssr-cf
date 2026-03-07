@@ -4,7 +4,7 @@
 
 import { NextResponse } from 'next/server';
 
-export type PlanTier = 'anonymous' | 'github' | 'pro';
+export type PlanTier = 'anonymous' | 'free' | 'pro';
 
 interface WindowEntry {
   timestamps: number[];
@@ -26,10 +26,10 @@ const windows = new Map<string, WindowEntry>();
 
 const WINDOW_MS = 60_000;
 const CLEANUP_INTERVAL = 120_000;
-const VALID_PLAN_TIERS = new Set<PlanTier>(['anonymous', 'github', 'pro']);
+const VALID_PLAN_TIERS = new Set<PlanTier>(['anonymous', 'free', 'pro']);
 const DEFAULT_LIMITS: Record<PlanTier, number> = {
   anonymous: 10,
-  github: 30,
+  free: 10,
   pro: 100,
 };
 
@@ -46,7 +46,7 @@ function readPositiveInt(value: string | undefined, fallback: number): number {
 function getPlanLimits(): Record<PlanTier, number> {
   return {
     anonymous: readPositiveInt(process.env.SITEJSON_RATE_LIMIT_ANONYMOUS_RPM, DEFAULT_LIMITS.anonymous),
-    github: readPositiveInt(process.env.SITEJSON_RATE_LIMIT_GITHUB_RPM, DEFAULT_LIMITS.github),
+    free: readPositiveInt(process.env.SITEJSON_RATE_LIMIT_FREE_RPM ?? process.env.SITEJSON_RATE_LIMIT_GITHUB_RPM, DEFAULT_LIMITS.free),
     pro: readPositiveInt(process.env.SITEJSON_RATE_LIMIT_PRO_RPM, DEFAULT_LIMITS.pro),
   };
 }

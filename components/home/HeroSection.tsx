@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowRight, Search, Sparkles, Github } from 'lucide-react';
+import { ArrowRight, Search, Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
+import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS } from '@/lib/auth/session';
 
 type CodeViewerProps = {
   domain: string;
@@ -90,7 +91,7 @@ export const HeroSection: React.FC = () => {
                 pulse
                 className="mb-2"
               >
-                No credit card required
+                GitHub sign-in unlocks {FREE_STARTER_CREDITS} free requests
               </Badge>
             </div>
 
@@ -102,8 +103,9 @@ export const HeroSection: React.FC = () => {
             </h1>
 
             <p className="text-lg text-ink-600 max-w-xl leading-relaxed">
-              Start instantly with Anonymous access at 10 req/min. Sign in with GitHub to unlock 30 req/min, free API
-              key management, a personal dashboard, and usage tracking.
+              Anonymous API access is disabled. Sign in with GitHub to unlock a one-time {FREE_STARTER_CREDITS}
+              {' '}free requests, a signed API key, a personal dashboard, and {FREE_RATE_LIMIT_RPM} req/min for
+              integration work.
             </p>
 
             <div className="mt-4 w-full max-w-md">
@@ -132,26 +134,25 @@ export const HeroSection: React.FC = () => {
               <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-ink-500">
                 <span className="flex items-center gap-1">
                   <Sparkles size={14} className="text-ochre-500" />
-                  No credit card required
+                  GitHub sign-in unlocks {FREE_STARTER_CREDITS} free requests
                 </span>
                 <span className="hidden sm:inline text-ink-300">•</span>
-                <span>Anonymous: 10 req/min</span>
+                <span>Free plan: {FREE_STARTER_CREDITS} one-time requests</span>
                 <span className="hidden sm:inline text-ink-300">•</span>
-                <span>GitHub Free: 30 req/min + dashboard</span>
+                <span>Signed API key + {FREE_RATE_LIMIT_RPM} req/min</span>
               </div>
             </div>
 
             <div className="flex items-center gap-4 pt-4">
-              <a href="/data/openai.com">
+              <a href="/api/auth/github/start">
                 <Button size="lg" variant="clay" shimmer glow>
-                  Try It Now
+                  Get API Key
                   <ArrowRight size={18} />
                 </Button>
               </a>
-              <a href="/api/auth/github/start">
+              <a href="/data/openai.com">
                 <Button variant="outline" size="lg">
-                  <Github size={18} />
-                  GitHub Login for Free API Key
+                  View Live Example
                 </Button>
               </a>
             </div>

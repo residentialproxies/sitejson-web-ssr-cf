@@ -12,3 +12,9 @@ pages_build_output_dir = ".vercel/output/static"
 
 [vars]
 PUBLIC_SITE_BASE_URL = "https://sitejson.com"
+SITEJSON_STARTER_CREDITS_D1_BINDING = "SITEJSON_CREDITS_DB"
+
+[[d1_databases]]
+binding = "SITEJSON_CREDITS_DB"
+database_name = "sitejson-starter-credits"
+database_id = "replace-with-your-d1-database-id"

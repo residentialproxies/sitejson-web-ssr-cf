@@ -11,12 +11,13 @@ const createRequest = (path: string, ip: string) =>
 describe('Rate Limit Tiers', () => {
   beforeEach(() => {
     process.env.SITEJSON_RATE_LIMIT_ANONYMOUS_RPM = '10';
-    process.env.SITEJSON_RATE_LIMIT_GITHUB_RPM = '30';
+    process.env.SITEJSON_RATE_LIMIT_FREE_RPM = '10';
     process.env.SITEJSON_RATE_LIMIT_PRO_RPM = '100';
   });
 
   afterEach(() => {
     delete process.env.SITEJSON_RATE_LIMIT_ANONYMOUS_RPM;
+    delete process.env.SITEJSON_RATE_LIMIT_FREE_RPM;
     delete process.env.SITEJSON_RATE_LIMIT_GITHUB_RPM;
     delete process.env.SITEJSON_RATE_LIMIT_PRO_RPM;
   });
@@ -38,19 +39,19 @@ describe('Rate Limit Tiers', () => {
     expect(body?.error?.code).toBe('RATE_LIMITED');
   });
 
-  it('enforces 30 req/min for github account', async () => {
+  it('enforces 10 req/min for free account', async () => {
     const request = createRequest('/api/sitejson/sites/openai.com', '198.51.100.20');
 
-    for (let i = 0; i < 30; i += 1) {
-      const result = checkRateLimit(request, { plan: 'github', userId: 'github-user-1' });
+    for (let i = 0; i < 10; i += 1) {
+      const result = checkRateLimit(request, { plan: 'free', userId: 'free-user-1' });
       expect(result.blocked).toBeNull();
-      expect(result.headers['x-ratelimit-limit']).toBe('30');
-      expect(result.plan).toBe('github');
+      expect(result.headers['x-ratelimit-limit']).toBe('10');
+      expect(result.plan).toBe('free');
     }
 
-    const blocked = checkRateLimit(request, { plan: 'github', userId: 'github-user-1' });
+    const blocked = checkRateLimit(request, { plan: 'free', userId: 'free-user-1' });
     expect(blocked.blocked?.status).toBe(429);
-    expect(blocked.headers['x-ratelimit-limit']).toBe('30');
+    expect(blocked.headers['x-ratelimit-limit']).toBe('10');
     const body = await blocked.blocked?.json();
     expect(body?.error?.code).toBe('RATE_LIMITED');
   });

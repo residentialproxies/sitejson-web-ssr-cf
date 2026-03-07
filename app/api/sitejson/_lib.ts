@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import { checkRateLimit } from './_rate-limit';
-import { getSessionFromRequest } from '@/lib/auth/session';
+import { requireApiAccess } from './_auth';
 import { readRuntimeEnv } from '@/lib/runtime-env';
+import { resolveSessionFromRequest } from '@/lib/auth/session';
+import {
+  createMonthlyQuotaHeaders,
+  getUserEntitlements,
+  isAccountEntitlementsConfigurationError,
+  refundMonthlyQuota,
+  reserveMonthlyQuota,
+} from '@/lib/entitlements';
+import {
+  createStarterCreditsHeaders,
+  isStarterCreditsConfigurationError,
+  refundStarterCredits,
+  reserveStarterCredits,
+} from '@/lib/starter-credits';
 
 const defaultTimeoutMs = 15000;
+const PUBLIC_PROXY_PATHS = new Set(['/api/v1/healthz', '/api/v1/readyz']);
 
-// Cache configuration by path pattern
 const CACHE_CONFIG: Record<string, { sMaxAge: number; staleWhileRevalidate: number }> = {
   '/api/v1/sites/': { sMaxAge: 300, staleWhileRevalidate: 600 },
   '/api/v1/directory/': { sMaxAge: 300, staleWhileRevalidate: 86400 },
@@ -59,10 +73,93 @@ const getTimeoutMs = (): number => {
   return defaultTimeoutMs;
 };
 
+const getRequestId = (request: Request): string => {
+  const forwardedRequestId =
+    request.headers.get('x-request-id')?.trim() ??
+    request.headers.get('cf-ray')?.trim();
+
+  return forwardedRequestId || crypto.randomUUID();
+};
+
+const appendHeaders = (target: Headers, values?: Record<string, string>) => {
+  if (!values) return;
+  for (const [key, value] of Object.entries(values)) {
+    target.set(key, value);
+  }
+};
+
+const entitlementsUnavailableResponse = (message: string, rateLimitHeaders?: Record<string, string>) =>
+  NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: 'ENTITLEMENTS_STORE_UNAVAILABLE',
+        message,
+      },
+    },
+    {
+      status: 503,
+      headers: {
+        ...(rateLimitHeaders ?? {}),
+        'cache-control': 'no-store',
+      },
+    },
+  );
+
+const starterCreditsExhaustedResponse = (
+  summary: Parameters<typeof createStarterCreditsHeaders>[0],
+  requestId: string,
+  rateLimitHeaders?: Record<string, string>,
+) =>
+  NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: 'STARTER_CREDITS_EXHAUSTED',
+        message: 'Your one-time free starter credits are exhausted. Contact hello@sitejson.com if you need more access before payments go live.',
+      },
+    },
+    {
+      status: 402,
+      headers: {
+        ...(rateLimitHeaders ?? {}),
+        ...createStarterCreditsHeaders(summary, {
+          chargedCredits: 0,
+          requestId,
+        }),
+        'cache-control': 'no-store',
+      },
+    },
+  );
+
+const monthlyQuotaExhaustedResponse = (
+  summary: Parameters<typeof createMonthlyQuotaHeaders>[0],
+  rateLimitHeaders?: Record<string, string>,
+) =>
+  NextResponse.json(
+    {
+      ok: false,
+      error: {
+        code: 'PRO_MONTHLY_QUOTA_EXHAUSTED',
+        message: 'Your Pro monthly quota is exhausted for the current billing cycle. Contact hello@sitejson.com if you need a temporary increase.',
+      },
+    },
+    {
+      status: 402,
+      headers: {
+        ...(rateLimitHeaders ?? {}),
+        ...createMonthlyQuotaHeaders(summary, {
+          chargedUnits: 0,
+        }),
+        'cache-control': 'no-store',
+      },
+    },
+  );
+
 const createHeaders = (
   headers?: HeadersInit,
   auth?: {
-    plan: 'github' | 'pro';
+    plan: 'free' | 'pro';
     userId: string;
   },
 ): Headers => {
@@ -90,12 +187,152 @@ export const rateLimitedProxy = async (
   path: string,
   init?: RequestInit,
 ) => {
-  const session = await getSessionFromRequest(request);
-  const auth = session ? { plan: session.plan, userId: session.login || session.sub } : undefined;
+  const isPublicPath = PUBLIC_PROXY_PATHS.has(path);
+  const session = await resolveSessionFromRequest(request);
+
+  if (!isPublicPath) {
+    const denied = await requireApiAccess(request, session);
+    if (denied) return denied;
+  }
+
+  const identity = session
+    ? {
+        sub: session.sub,
+        login: session.login || session.sub,
+      }
+    : null;
+
+  let entitlements: Awaited<ReturnType<typeof getUserEntitlements>> | null = null;
+  if (identity) {
+    try {
+      entitlements = await getUserEntitlements(identity);
+    } catch (error) {
+      if (isStarterCreditsConfigurationError(error) || isAccountEntitlementsConfigurationError(error)) {
+        return entitlementsUnavailableResponse(error.message);
+      }
+      throw error;
+    }
+  }
+
+  const auth = session && entitlements
+    ? { plan: entitlements.plan, userId: identity?.login ?? session.sub }
+    : undefined;
 
   const rateLimit = checkRateLimit(request, auth ? { plan: auth.plan, userId: auth.userId } : { plan: 'anonymous' });
   if (rateLimit.blocked) return rateLimit.blocked;
-  return proxyToSitejson(path, init, rateLimit.headers, auth);
+
+  const method = init?.method ?? request.method;
+  const requestId = getRequestId(request);
+  const shouldCharge = !isPublicPath && !!session;
+
+  let reservedCredits:
+    | Awaited<ReturnType<typeof reserveStarterCredits>>
+    | null = null;
+  let reservedMonthlyQuota:
+    | Awaited<ReturnType<typeof reserveMonthlyQuota>>
+    | null = null;
+
+  if (shouldCharge && session && identity && entitlements) {
+    if (entitlements.plan === 'pro') {
+      try {
+        reservedMonthlyQuota = await reserveMonthlyQuota(identity);
+      } catch (error) {
+        if (isAccountEntitlementsConfigurationError(error)) {
+          return entitlementsUnavailableResponse(error.message, rateLimit.headers);
+        }
+        throw error;
+      }
+
+      if (!reservedMonthlyQuota.applied) {
+        return monthlyQuotaExhaustedResponse(reservedMonthlyQuota.summary, rateLimit.headers);
+      }
+    } else {
+      try {
+        reservedCredits = await reserveStarterCredits({ ...session, plan: 'free' }, {
+          endpoint: path,
+          method,
+          requestId,
+        });
+      } catch (error) {
+        if (isStarterCreditsConfigurationError(error)) {
+          return entitlementsUnavailableResponse(error.message, rateLimit.headers);
+        }
+        throw error;
+      }
+
+      if (!reservedCredits.applied) {
+        return starterCreditsExhaustedResponse(reservedCredits.summary, requestId, rateLimit.headers);
+      }
+    }
+  }
+
+  const response = await proxyToSitejson(path, init, rateLimit.headers, auth);
+
+  if (!shouldCharge || !session || !identity || !entitlements) {
+    return response;
+  }
+
+  if (response.status >= 500) {
+    if (entitlements.plan === 'pro' && reservedMonthlyQuota) {
+      try {
+        const refunded = await refundMonthlyQuota(identity);
+        appendHeaders(
+          response.headers,
+          createMonthlyQuotaHeaders(refunded.summary, {
+            chargedUnits: 0,
+            refundedUnits: 1,
+          }),
+        );
+      } catch (error) {
+        if (isAccountEntitlementsConfigurationError(error)) {
+          return entitlementsUnavailableResponse(error.message, rateLimit.headers);
+        }
+        throw error;
+      }
+    } else if (reservedCredits) {
+      try {
+        const refunded = await refundStarterCredits({ ...session, plan: 'free' }, {
+          endpoint: path,
+          method,
+          requestId,
+        });
+        appendHeaders(
+          response.headers,
+          createStarterCreditsHeaders(refunded.summary, {
+            chargedCredits: 0,
+            refundedCredits: 1,
+            requestId,
+          }),
+        );
+      } catch (error) {
+        if (isStarterCreditsConfigurationError(error)) {
+          return entitlementsUnavailableResponse(error.message, rateLimit.headers);
+        }
+        throw error;
+      }
+    }
+
+    return response;
+  }
+
+  if (entitlements.plan === 'pro' && reservedMonthlyQuota) {
+    appendHeaders(
+      response.headers,
+      createMonthlyQuotaHeaders(reservedMonthlyQuota.summary, {
+        chargedUnits: 1,
+      }),
+    );
+  } else if (reservedCredits) {
+    appendHeaders(
+      response.headers,
+      createStarterCreditsHeaders(reservedCredits.summary, {
+        chargedCredits: 1,
+        requestId,
+      }),
+    );
+  }
+
+  return response;
 };
 
 export const proxyToSitejson = async (
@@ -103,7 +340,7 @@ export const proxyToSitejson = async (
   init?: RequestInit,
   rateLimitHeaders?: Record<string, string>,
   auth?: {
-    plan: 'github' | 'pro';
+    plan: 'free' | 'pro';
     userId: string;
   },
 ) => {
@@ -128,7 +365,6 @@ export const proxyToSitejson = async (
       ...rateLimitHeaders,
     };
 
-    // Add cache headers based on path
     if (!upstream.ok) {
       responseHeaders['cache-control'] = 'no-store, must-revalidate';
     } else {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Check, ArrowRight, ShieldCheck, KeyRound } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA, PRO_RATE_LIMIT_RPM } from '@/lib/auth/session';
 
 type PricingPlan = {
   name: string;
@@ -15,53 +16,52 @@ type PricingPlan = {
 
 const plans: PricingPlan[] = [
   {
-    name: 'Anonymous',
+    name: 'Docs & Demo',
     price: '$0 /month',
-    subtitle: 'Quick access without any setup',
-    ctaLabel: 'Try It Now',
+    subtitle: 'Explore the product before requesting API access',
+    ctaLabel: 'View Live Example',
     ctaHref: '/data/openai.com',
     ctaVariant: 'outline',
     features: [
-      '10 req/min rate limit',
-      'IP geolocation data',
-      'ASN and organization info',
-      'Risk scoring with explanations',
-      'VPN/Proxy/Tor detection',
-      'No API key required',
+      'Public documentation access',
+      'Live directory and site examples',
+      'Reference payload previews',
+      'No anonymous API requests',
+      'Upgrade path via GitHub login',
+      'Manual Pro activation available',
     ],
   },
   {
-    name: 'GitHub Free',
+    name: 'Free',
     price: '$0 /month',
-    subtitle: 'Higher limits with a free API key',
+    subtitle: 'GitHub login unlocks your free API key',
     badge: 'Recommended',
-    ctaLabel: 'Get Free API Key with GitHub',
+    ctaLabel: 'Get API Key with GitHub',
     ctaHref: '/api/auth/github/start',
     ctaVariant: 'clay',
     features: [
-      '30 req/min rate limit',
+      `${FREE_STARTER_CREDITS} one-time starter requests`,
+      `${FREE_RATE_LIMIT_RPM} req/min rate limit`,
+      'Signed API key',
       'Personal dashboard',
-      'API key management',
-      'Per-key usage tracking',
-      'All Anonymous features',
-      'Community support',
+      'Starter usage visibility',
+      'No credit card required',
     ],
   },
   {
     name: 'Pro',
-    price: 'Coming Soon',
-    subtitle: 'High-volume with dedicated support',
-    ctaLabel: 'Join Waitlist',
-    ctaHref: 'mailto:hello@sitejson.com?subject=SiteJSON%20Pro%20Waitlist',
+    price: 'Manual activation',
+    subtitle: 'For teams and power users',
+    ctaLabel: 'Request Pro Access',
+    ctaHref: 'mailto:hello@sitejson.com?subject=Activate%20SiteJSON%20Pro',
     ctaVariant: 'outline',
     features: [
-      '100 req/min',
-      'Guaranteed throughput',
+      `${PRO_MONTHLY_QUOTA} requests per billing cycle`,
+      `${PRO_RATE_LIMIT_RPM} req/min rate limit`,
+      'Manual activation for now',
+      'Billing integration coming soon',
       'Priority support',
-      '99.9% uptime SLA',
-      'Advanced analytics',
-      'Custom traffic policies',
-      'All Free features',
+      'Team-friendly upgrade path',
     ],
   },
 ];
@@ -77,25 +77,29 @@ export const PricingSection: React.FC = () => {
             Simple, Transparent Pricing
           </div>
           <h2 className="mb-4 text-4xl font-medium text-ink-900 md:text-5xl">
-            Start free. Upgrade with GitHub login.
+            GitHub login unlocks the API.
           </h2>
           <p className="text-lg leading-relaxed text-ink-600">
-            Start free with 10 req/min. Sign in with GitHub to unlock 30 req/min, a dashboard, and usage
-            tracking. No credit card required.
+            Anonymous API access is disabled. Sign in with GitHub to receive {FREE_STARTER_CREDITS} one-time starter
+            requests, a signed API key, and {FREE_RATE_LIMIT_RPM} req/min. Pro adds {PRO_MONTHLY_QUOTA} requests per
+            billing cycle at {PRO_RATE_LIMIT_RPM} req/min.
           </p>
           <div className="mt-5 inline-flex flex-wrap items-center justify-center gap-2">
             <span className="rounded-full border border-ink-200 bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wide text-ink-600">
-              No credit card required
+              {FREE_STARTER_CREDITS} one-time starter requests
             </span>
             <span className="rounded-full border border-sage-300 bg-sage-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-sage-700">
-              GitHub login unlocks higher limit
+              API key required
+            </span>
+            <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+              Pro checkout coming later
             </span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {plans.map((plan) => {
-            const highlighted = plan.name === 'GitHub Free';
+            const highlighted = plan.name === 'Free';
 
             return (
               <article
@@ -135,7 +139,7 @@ export const PricingSection: React.FC = () => {
                     className="w-full justify-center font-semibold"
                     shimmer={highlighted}
                   >
-                    {plan.name === 'GitHub Free' && <KeyRound size={16} />}
+                    {plan.name === 'Free' && <KeyRound size={16} />}
                     {plan.ctaLabel}
                     <ArrowRight size={16} />
                   </Button>

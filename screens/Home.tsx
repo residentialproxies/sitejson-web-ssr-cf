@@ -7,6 +7,7 @@ import { CheckCircle2, Globe2, Server, Zap, Database, Code2, Cpu, ArrowRight } f
 import { Button } from '../components/ui/Button';
 import Link from 'next/link';
 import { PricingSection } from '../components/home/PricingSection';
+import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA } from '@/lib/auth/session';
 
 const BentoGrid = dynamic(
   () => import('../components/home/BentoGrid').then((mod) => mod.BentoGrid),
@@ -47,10 +48,10 @@ const Home: React.FC = () => {
         <div className="container mx-auto max-w-7xl px-4 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12 border-b border-slate-50 pb-8">
             {[
-              { label: 'Anonymous Limit', value: '10 req/min' },
-              { label: 'GitHub Login', value: '30 req/min' },
-              { label: 'Credit Card', value: 'Not required' },
-              { label: 'API Latency', value: '< 200ms' },
+              { label: 'Starter Requests', value: String(FREE_STARTER_CREDITS) },
+              { label: 'Free Plan', value: `${FREE_RATE_LIMIT_RPM} req/min` },
+              { label: 'API Access', value: 'Key required' },
+              { label: 'Pro Plan', value: `${PRO_MONTHLY_QUOTA}/cycle` },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center md:items-start">
                 <span className="text-2xl md:text-3xl font-bold text-slate-900 font-mono tracking-tight">{stat.value}</span>
@@ -173,22 +174,22 @@ const Home: React.FC = () => {
       {/* 7. CTA Footer */}
       <section className="py-20 bg-slate-900 text-white">
         <div className="container mx-auto px-4 text-center max-w-3xl">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6">Start free. Unlock more with GitHub login.</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6">GitHub login unlocks your free API key.</h2>
           <p className="text-slate-400 text-lg mb-8">
-            Anonymous access gives instant API calls at 10 req/min.
+            Anonymous API access is disabled.
             <br />
-            Sign in with GitHub for 30 req/min, dashboard access, and usage tracking.
+            Sign in with GitHub for {FREE_STARTER_CREDITS} one-time starter requests, a signed API key, and {FREE_RATE_LIMIT_RPM} req/min. Pro adds {PRO_MONTHLY_QUOTA} requests per billing cycle and is manually activated for now.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a href="/data/openai.com">
+            <a href="/api/auth/github/start">
               <Button className="bg-white text-slate-900 hover:bg-slate-100 px-8 h-12 text-base">
-                Try It Now
+                Get API Key
                 <ArrowRight size={18} />
               </Button>
             </a>
-            <a href="/api/auth/github/start">
+            <a href="/data/openai.com">
               <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white px-8 h-12 text-base">
-                GitHub Login for Free API Key
+                View Live Example
               </Button>
             </a>
           </div>

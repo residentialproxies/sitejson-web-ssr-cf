@@ -9,8 +9,15 @@ export const LOGIN_COOKIE_NAME = 'sitejson_login';
 
 export const SESSION_TTL_SECONDS = 60 * 60 * 24 * 7; // 7 days
 export const OAUTH_STATE_TTL_SECONDS = 60 * 10; // 10 minutes
+export const AUTH_PROVIDER_GITHUB = 'github';
+export const FREE_STARTER_CREDITS = 200;
+export const FREE_RATE_LIMIT_RPM = 10;
+export const PRO_MONTHLY_QUOTA = 1000;
+export const PRO_RATE_LIMIT_RPM = 100;
+export const BILLING_MODE_MANUAL = 'manual';
 
-export type SessionPlan = 'github';
+export type SessionPlan = 'free' | 'pro';
+export type SessionAuthProvider = typeof AUTH_PROVIDER_GITHUB;
 
 export type SessionUser = {
   id: string;
@@ -23,6 +30,7 @@ export type SessionUser = {
 export type SessionPayload = {
   sub: string;
   plan: SessionPlan;
+  authProvider: SessionAuthProvider;
   login: string;
   name: string | null;
   email: string | null;
@@ -98,7 +106,8 @@ export const createSessionPayload = (user: SessionUser): SessionPayload => {
   const iat = Math.floor(Date.now() / 1000);
   return {
     sub: user.id,
-    plan: 'github',
+    plan: 'free',
+    authProvider: AUTH_PROVIDER_GITHUB,
     login: user.login,
     name: user.name,
     email: user.email,
@@ -127,19 +136,25 @@ export const verifySessionToken = async (token: string | null | undefined): Prom
   try {
     const parsed = JSON.parse(decoder.decode(fromBase64Url(body))) as Partial<SessionPayload>;
     const now = Math.floor(Date.now() / 1000);
+    const legacyPlan = (parsed as { plan?: string }).plan;
+    const parsedPlan = legacyPlan === 'pro' ? 'pro' : legacyPlan === 'free' || legacyPlan === 'github' ? 'free' : null;
     const login = parsed.login ?? parsed.user?.login;
     const name = parsed.name ?? parsed.user?.name ?? null;
     const email = parsed.email ?? parsed.user?.email ?? null;
     const avatarUrl = parsed.avatarUrl ?? parsed.user?.avatarUrl ?? null;
     const sub = parsed.sub ?? parsed.user?.id;
+    const authProvider = parsed.authProvider === AUTH_PROVIDER_GITHUB || legacyPlan === 'github'
+      ? AUTH_PROVIDER_GITHUB
+      : parsed.authProvider ?? AUTH_PROVIDER_GITHUB;
 
     if (!sub || !login) return null;
-    if (parsed.plan !== 'github') return null;
+    if (!parsedPlan) return null;
     if (!parsed.exp || parsed.exp <= now) return null;
 
     return {
       sub,
-      plan: 'github',
+      plan: parsedPlan,
+      authProvider,
       login,
       name,
       email,
@@ -168,7 +183,31 @@ const getCookieValue = (cookieHeader: string, name: string): string | null => {
   return null;
 };
 
+const getApiKeyValue = (request: Request): string | null => {
+  const authorization = request.headers.get('authorization');
+  if (authorization) {
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+    if (match?.[1]?.trim()) {
+      return match[1].trim();
+    }
+  }
+
+  const apiKey = request.headers.get('x-api-key')?.trim();
+  return apiKey || null;
+};
+
 export const getSessionFromRequest = async (request: Request): Promise<SessionPayload | null> => {
   const token = getCookieValue(request.headers.get('cookie') ?? '', SESSION_COOKIE_NAME);
   return verifySessionToken(token);
+};
+
+export const getSessionFromApiKey = async (request: Request): Promise<SessionPayload | null> => {
+  const token = getApiKeyValue(request);
+  return verifySessionToken(token);
+};
+
+export const resolveSessionFromRequest = async (request: Request): Promise<SessionPayload | null> => {
+  const cookieSession = await getSessionFromRequest(request);
+  if (cookieSession) return cookieSession;
+  return getSessionFromApiKey(request);
 };

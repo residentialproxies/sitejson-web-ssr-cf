@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { readRuntimeEnv } from '@/lib/runtime-env';
+import { readRuntimeBinding, readRuntimeEnv } from '@/lib/runtime-env';
 
 const requestContextSymbol = Symbol.for('__cloudflare-request-context__');
 
@@ -50,5 +50,16 @@ describe('readRuntimeEnv', () => {
     };
 
     expect(readRuntimeEnv('SITEJSON_API_KEY')).toBeUndefined();
+  });
+
+  it('returns non-string bindings from Cloudflare request context', () => {
+    const binding = { prepare: () => ({}) };
+    (globalThis as Record<PropertyKey, unknown>)[requestContextSymbol] = {
+      env: {
+        SITEJSON_CREDITS_DB: binding,
+      },
+    };
+
+    expect(readRuntimeBinding<typeof binding>('SITEJSON_CREDITS_DB')).toBe(binding);
   });
 });

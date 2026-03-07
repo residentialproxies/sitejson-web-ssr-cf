@@ -9,7 +9,7 @@ import { Button } from '../ui/Button';
 
 type SessionState = {
   authenticated: boolean;
-  plan: 'anonymous' | 'github' | 'pro';
+  plan: 'anonymous' | 'free' | 'pro';
   user?: {
     login?: string | null;
   };
@@ -84,13 +84,13 @@ export const Navbar: React.FC = () => {
             </>
           ) : (
             <a href="/api/auth/github/start" className="hover:text-ink-900 transition-colors">
-              Login with GitHub
+              GitHub Login
             </a>
           )}
 
           <a href={showAuthedNav ? "/dashboard" : "/api/auth/github/start"} className="hidden sm:flex">
             <Button variant="clay" size="sm">
-              {showAuthedNav ? 'Manage API Key' : 'Get Free API Key'}
+              {showAuthedNav ? 'Manage API Key' : 'Get API Key'}
             </Button>
           </a>
 

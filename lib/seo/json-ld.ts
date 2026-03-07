@@ -1,4 +1,5 @@
 import type { SiteReport } from '@/lib/api-client/types';
+import { FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA, PRO_RATE_LIMIT_RPM } from '@/lib/auth/session';
 import { normalizeDirectorySlug, normalizeDomainInput } from '@/lib/utils';
 
 /**
@@ -305,7 +306,7 @@ export function generateHomepageJsonLd(): string {
     },
     {
       question: 'Is there a free tier?',
-      answer: 'Yes, SiteJSON offers a free tier with 100 requests per month. No credit card is required to get started.',
+      answer: `SiteJSON API access requires a key. GitHub login grants ${FREE_STARTER_CREDITS} one-time starter requests and a signed API key. Pro adds ${PRO_MONTHLY_QUOTA} requests per billing cycle at ${PRO_RATE_LIMIT_RPM} req/min and is manually activated until checkout launches.`,
     },
     {
       question: 'How do I integrate SiteJSON into my application?',

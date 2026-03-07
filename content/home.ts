@@ -1,3 +1,5 @@
+import { FREE_STARTER_CREDITS, FREE_RATE_LIMIT_RPM, PRO_MONTHLY_QUOTA, PRO_RATE_LIMIT_RPM } from '@/lib/auth/session';
+
 export const homeContent = {
   headline: 'Production-grade website intelligence API',
   subheadline:
@@ -79,7 +81,7 @@ export const homeContent = {
     {
       question: 'Is there a free tier available?',
       answer:
-        'Yes, SiteJSON offers a generous free tier with 100 API requests per month, perfect for testing and small projects. No credit card is required to get started. Paid plans scale with your usage needs.',
+        `SiteJSON API access requires a key. Sign in with GitHub to receive ${FREE_STARTER_CREDITS} one-time starter requests, a signed API key, and ${FREE_RATE_LIMIT_RPM} req/min. Pro adds ${PRO_MONTHLY_QUOTA} requests per billing cycle at ${PRO_RATE_LIMIT_RPM} req/min and is manually activated until checkout ships.`,
     },
     {
       question: 'What programming languages are supported?',
@@ -120,9 +122,10 @@ export const homeContent = {
       using IAB taxonomy. And our trust scoring helps you avoid risky domains before they become a problem.
     `,
     gettingStarted: `
-      Getting started with SiteJSON is simple. Sign up for a free API key, make your first request to our
-      /api/v1/analyze endpoint, and start receiving comprehensive website intelligence in seconds. Our
-      documentation includes code examples in multiple languages, and our support team is always ready to help.
+      Getting started with SiteJSON is simple. Sign in with GitHub to receive your free API key, make your
+      first request to our /api/v1/analyze endpoint, and start receiving comprehensive website intelligence in
+      seconds. Our documentation includes code examples in multiple languages, and our support team is always
+      ready to help.
     `,
   },
 };
