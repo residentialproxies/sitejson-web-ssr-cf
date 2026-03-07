@@ -19,6 +19,7 @@ import {
 
 const defaultTimeoutMs = 15000;
 const PUBLIC_PROXY_PATHS = new Set(['/api/v1/healthz', '/api/v1/readyz']);
+const PUBLIC_READ_PREFIXES = ['/api/v1/directory/', '/api/v1/sites/'];
 
 const CACHE_CONFIG: Record<string, { sMaxAge: number; staleWhileRevalidate: number }> = {
   '/api/v1/sites/': { sMaxAge: 300, staleWhileRevalidate: 600 },
@@ -187,7 +188,7 @@ export const rateLimitedProxy = async (
   path: string,
   init?: RequestInit,
 ) => {
-  const isPublicPath = PUBLIC_PROXY_PATHS.has(path);
+  const isPublicPath = PUBLIC_PROXY_PATHS.has(path) || PUBLIC_READ_PREFIXES.some((prefix) => path.startsWith(prefix));
   const session = await resolveSessionFromRequest(request);
 
   if (!isPublicPath) {

@@ -38,7 +38,7 @@ describe('SiteJSON proxy access', () => {
     vi.mocked(resolveSessionFromRequest).mockResolvedValueOnce(null);
     const request = new Request('https://sitejson.com/api/sitejson/sites/openai.com');
 
-    const response = await rateLimitedProxy(request, '/api/v1/sites/openai.com');
+    const response = await rateLimitedProxy(request, '/api/v1/ingest/domains');
     const body = await response.json();
 
     expect(response.status).toBe(401);
@@ -60,7 +60,7 @@ describe('SiteJSON proxy access', () => {
     vi.mocked(resolveSessionFromRequest).mockResolvedValueOnce(freeSession as never);
 
     const request = new Request('https://sitejson.com/api/sitejson/sites/openai.com');
-    const response = await rateLimitedProxy(request, '/api/v1/sites/openai.com');
+    const response = await rateLimitedProxy(request, '/api/v1/ingest/domains');
     const summary = await getStarterCreditsSummary(freeSession);
 
     expect(response.status).toBe(200);
@@ -81,7 +81,7 @@ describe('SiteJSON proxy access', () => {
     );
 
     const request = new Request('https://sitejson.com/api/sitejson/sites/openai.com');
-    const response = await rateLimitedProxy(request, '/api/v1/sites/openai.com');
+    const response = await rateLimitedProxy(request, '/api/v1/ingest/domains');
     const summary = await getStarterCreditsSummary(freeSession);
 
     expect(response.status).toBe(503);
@@ -100,7 +100,7 @@ describe('SiteJSON proxy access', () => {
     vi.mocked(resolveSessionFromRequest).mockResolvedValueOnce(freeSession as never);
 
     const request = new Request('https://sitejson.com/api/sitejson/sites/openai.com');
-    const response = await rateLimitedProxy(request, '/api/v1/sites/openai.com');
+    const response = await rateLimitedProxy(request, '/api/v1/ingest/domains');
     const body = await response.json();
 
     expect(response.status).toBe(402);
@@ -122,7 +122,7 @@ describe('SiteJSON proxy access', () => {
     vi.mocked(resolveSessionFromRequest).mockResolvedValueOnce(freeSession as never);
 
     const request = new Request('https://sitejson.com/api/sitejson/sites/openai.com');
-    const response = await rateLimitedProxy(request, '/api/v1/sites/openai.com');
+    const response = await rateLimitedProxy(request, '/api/v1/ingest/domains');
     const summary = await getStarterCreditsSummary(freeSession);
 
     expect(response.status).toBe(200);
