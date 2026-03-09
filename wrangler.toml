@@ -1,0 +1,14 @@
+name = "sitejson-web-ssr"
+compatibility_date = "2026-02-08"
+compatibility_flags = ["nodejs_compat"]
+pages_build_output_dir = ".vercel/output/static"
+
+[vars]
+PUBLIC_SITE_BASE_URL = "https://sitejson.com"
+SITEJSON_API_BASE_URL = "https://api.sitejson.com"
+SITEJSON_STARTER_CREDITS_D1_BINDING = "SITEJSON_CREDITS_DB"
+
+[[d1_databases]]
+binding = "SITEJSON_CREDITS_DB"
+database_name = "sitejson-starter-credits"
+database_id = "fd181b60-8677-4f35-969c-aed98cca346b"

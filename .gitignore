@@ -8,7 +8,6 @@ dist
 .env*
 !.env.example
 .dev.vars
-wrangler.toml
 next-env.d.ts
 tsconfig.tsbuildinfo
 package-lock.json
