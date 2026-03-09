@@ -1,45 +1,54 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import DirectoryIndexPage from '@/app/directory/page';
-import DirectoryTypePage from '@/app/directory/[type]/page';
-import DirectorySlugPage from '@/app/directory/[type]/[slug]/page';
+import DirectoryTypePage, { generateMetadata as generateTypeMetadata } from '@/app/directory/[type]/page';
+import DirectorySlugPage, { generateMetadata as generateSlugMetadata } from '@/app/directory/[type]/[slug]/page';
 import { getDirectory } from '@/lib/api-client/client';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
+  notFound: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client/client', () => ({
   getDirectory: vi.fn(),
+  getDirectoryTypeSummary: vi.fn().mockResolvedValue(null),
+  getDirectoryStats: vi.fn().mockResolvedValue(null),
+  getGlobalInsights: vi.fn().mockResolvedValue(null),
 }));
 
-describe('directory fallback routes', () => {
+describe('directory routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getDirectory).mockResolvedValue({
-      items: [],
+      items: [
+        { domain: 'example.com', title: 'Example', rank: 123 },
+      ],
       pagination: {
         page: 1,
-        total: 0,
+        total: 1,
         page_size: 24,
       },
     });
   });
 
-  it('redirects /directory to a valid default listing', () => {
-    DirectoryIndexPage();
-    expect(redirect).toHaveBeenCalledWith('/directory/category/technology');
+  it('renders /directory as an indexable hub instead of redirecting', async () => {
+    const page = await DirectoryIndexPage();
+    expect(redirect).not.toHaveBeenCalled();
+    expect(page).toBeTruthy();
   });
 
-  it('redirects /directory/category to a valid default slug', async () => {
-    await DirectoryTypePage({ params: Promise.resolve({ type: 'category' }) });
-    expect(redirect).toHaveBeenCalledWith('/directory/category/technology');
+  it('renders /directory/category as a hub page instead of redirecting', async () => {
+    const page = await DirectoryTypePage({ params: Promise.resolve({ type: 'category' }) });
+    expect(redirect).not.toHaveBeenCalled();
+    expect(page).toBeTruthy();
   });
 
-  it('redirects unknown directory type to safe default route', async () => {
-    await DirectoryTypePage({ params: Promise.resolve({ type: 'unknown' }) });
-    expect(redirect).toHaveBeenCalledWith('/directory/category/technology');
+  it('returns notFound for unknown directory type hubs', async () => {
+    const page = await DirectoryTypePage({ params: Promise.resolve({ type: 'unknown' }) });
+    expect(notFound).toHaveBeenCalled();
+    expect(page).toBeNull();
   });
 
   it('redirects non-canonical directory slugs to canonical slug format', async () => {
@@ -47,37 +56,53 @@ describe('directory fallback routes', () => {
     expect(redirect).toHaveBeenCalledWith('/directory/technology/nextjs');
   });
 
-  it('redirects empty/invalid slug to type default slug', async () => {
+  it('redirects empty slug to the type seed slug', async () => {
     await DirectorySlugPage({ params: Promise.resolve({ type: 'topic', slug: '   ' }) });
     expect(redirect).toHaveBeenCalledWith('/directory/topic/finance');
   });
 
-  it('uses normalized type and slug for backend fetch when route is canonical', async () => {
+  it('returns notFound for invalid directory types on slug pages', async () => {
+    const page = await DirectorySlugPage({ params: Promise.resolve({ type: 'unknown', slug: 'marketing' }) });
+    expect(notFound).toHaveBeenCalled();
+    expect(page).toBeNull();
+  });
+
+  it('uses canonical type and slug for backend fetch when route is canonical', async () => {
     await DirectorySlugPage({ params: Promise.resolve({ type: 'category', slug: 'marketing' }) });
-    expect(redirect).not.toHaveBeenCalled();
     expect(getDirectory).toHaveBeenCalledWith('category', 'marketing', 1, 24);
   });
 
   it('renders parseable JSON-LD schema for canonical directory routes', async () => {
     const page = await DirectorySlugPage({ params: Promise.resolve({ type: 'category', slug: 'marketing' }) });
-    expect(redirect).not.toHaveBeenCalled();
-
     const fragment = page as React.ReactElement<{ children: React.ReactNode }>;
     const children = React.Children.toArray(fragment.props.children);
-    const scriptNode = children.find((child) => (
-      React.isValidElement(child) && child.type === 'script'
-    )) as React.ReactElement<{ dangerouslySetInnerHTML?: { __html?: string } }> | undefined;
-
-    expect(scriptNode).toBeDefined();
-    const jsonLdText = scriptNode?.props.dangerouslySetInnerHTML?.__html;
-    expect(typeof jsonLdText).toBe('string');
-
-    const parsed = JSON.parse(jsonLdText as string) as {
+    const scriptNode = children.find((child) => React.isValidElement(child) && child.type === 'script') as React.ReactElement<{ dangerouslySetInnerHTML?: { __html?: string } }> | undefined;
+    const parsed = JSON.parse(scriptNode?.props.dangerouslySetInnerHTML?.__html ?? '{}') as {
       '@graph'?: Array<{ '@type'?: string; url?: string }>;
     };
     const webPageNode = parsed['@graph']?.find((item) => item['@type'] === 'WebPage');
 
-    expect(parsed['@graph']).toBeDefined();
-    expect(webPageNode?.url).toBe('https://sitejson.com/directory/category/marketing');
+    expect(webPageNode?.url).toBe('https://sitejson.com' + '/directory/category/' + 'marketing');
+  });
+
+  it('builds indexable metadata for type hub routes', async () => {
+    const metadata = await generateTypeMetadata({ params: Promise.resolve({ type: 'technology' }) });
+    expect(metadata.alternates?.canonical).toBe('/directory/technology');
+    expect(metadata.title).toBe('Technology Directory Hub');
+  });
+
+  it('marks invalid type metadata as noindex', async () => {
+    const metadata = await generateTypeMetadata({ params: Promise.resolve({ type: 'unknown' }) });
+    expect(metadata.robots).toEqual({ index: false, follow: false });
+  });
+
+  it('marks empty detail pages as noindex', async () => {
+    vi.mocked(getDirectory).mockResolvedValueOnce({
+      items: [],
+      pagination: { page: 1, total: 0, page_size: 1 },
+    });
+
+    const metadata = await generateSlugMetadata({ params: Promise.resolve({ type: 'topic', slug: 'finance' }) });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
   });
 });

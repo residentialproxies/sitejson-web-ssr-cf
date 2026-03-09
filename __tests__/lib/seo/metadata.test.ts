@@ -31,8 +31,8 @@ describe('buildBaseMetadata', () => {
 
   it('should have correct description', () => {
     const metadata = buildBaseMetadata();
-    expect(metadata.description).toContain('Website intelligence API');
-    expect(metadata.description).toContain('traffic estimates');
+    expect(metadata.description).toContain('Browse website intelligence');
+    expect(metadata.description).toContain('technology');
   });
 
   it('should have correct icons configuration', () => {
@@ -257,6 +257,25 @@ describe('buildDataSubPageMetadata', () => {
     const metadata = buildDataSubPageMetadata(' HTTPS://Example.com/path ', 'seo');
     expect(metadata.alternates?.canonical).toBe('/data/example.com/seo');
     expect(metadata.openGraph?.url).toBe('/data/example.com/seo');
+  });
+
+  it('should generate correct metadata for alternatives subpage', () => {
+    const domain = 'example.com';
+    const metadata = buildDataSubPageMetadata(domain, 'alternatives');
+
+    expect(metadata.title).toBe('example.com Alternatives & Similar Sites');
+    expect(metadata.description).toContain('alternatives');
+    expect(metadata.description).toContain('example.com');
+    expect(metadata.alternates?.canonical).toBe('/data/example.com/alternatives');
+    expect(metadata.openGraph).toMatchObject({
+      title: 'example.com Alternatives & Similar Sites | SiteJSON',
+      url: '/data/example.com/alternatives',
+      type: 'article',
+    });
+    expect(metadata.twitter).toMatchObject({
+      card: 'summary_large_image',
+      title: 'example.com Alternatives & Similar Sites | SiteJSON',
+    });
   });
 });
 

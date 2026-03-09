@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { LayoutGrid, Cpu, Search, BarChart3, Briefcase, LucideIcon } from 'lucide-react';
+import { LayoutGrid, Cpu, Search, BarChart3, Briefcase, Users, LucideIcon } from 'lucide-react';
 
 interface NavTabsProps {
   domain: string;
@@ -18,10 +18,11 @@ interface Tab {
 
 const tabs: Tab[] = [
   { name: 'Overview', href: '', icon: LayoutGrid },
-  { name: 'Tech', href: '/tech', icon: Cpu },
-  { name: 'SEO', href: '/seo', icon: Search },
+  { name: 'Tech Stack', href: '/tech', icon: Cpu },
+  { name: 'SEO Signals', href: '/seo', icon: Search },
   { name: 'Traffic', href: '/traffic', icon: BarChart3 },
   { name: 'Business', href: '/business', icon: Briefcase },
+  { name: 'Alternatives', href: '/alternatives', icon: Users },
 ];
 
 export function NavTabs({ domain }: NavTabsProps) {
@@ -29,14 +30,11 @@ export function NavTabs({ domain }: NavTabsProps) {
   const basePath = `/data/${domain}`;
 
   return (
-    <nav className="bg-white border border-gray-200 rounded-lg shadow-sm">
-      <div className="flex overflow-x-auto">
+    <nav aria-label="Report sections" className="rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+      <div className="flex overflow-x-auto gap-2">
         {tabs.map((tab) => {
           const href = `${basePath}${tab.href}`;
-          const isActive = tab.href === ''
-            ? pathname === basePath
-            : pathname === href;
-
+          const isActive = tab.href === '' ? pathname === basePath : pathname === href;
           const Icon = tab.icon;
 
           return (
@@ -44,13 +42,13 @@ export function NavTabs({ domain }: NavTabsProps) {
               key={tab.name}
               href={href as `/data/${string}`}
               className={cn(
-                'flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors',
+                'inline-flex items-center gap-2 whitespace-nowrap rounded-xl px-4 py-3 text-sm font-medium transition-colors',
                 isActive
-                  ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'bg-clay-50 text-clay-700 shadow-sm ring-1 ring-clay-200'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
               )}
             >
-              <Icon className="w-4 h-4" />
+              <Icon className="h-4 w-4" />
               {tab.name}
             </Link>
           );

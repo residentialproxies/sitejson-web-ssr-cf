@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { DirectoryType } from '@/lib/pseo';
 import { normalizeDirectorySlug, normalizeDomainInput } from '@/lib/utils';
 
 const siteName = 'SiteJSON';
@@ -11,7 +12,6 @@ const toDisplayLabel = (value: string): string => value
   .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
   .join(' ');
 
-// Default OG image configuration
 const defaultOGImage = {
   url: `${BASE_URL}/api/og`,
   width: 1200,
@@ -25,7 +25,7 @@ export const buildBaseMetadata = (): Metadata => ({
     default: `${siteName} — Website Intelligence, Structured Data`,
     template: `%s | ${siteName}`,
   },
-  description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and structured site signals. Enrich your data in under 200ms.',
+  description: 'Browse website intelligence by market, technology, and topic. Open live reports with traffic, SEO, technology, and trust signals.',
   keywords: ['website intelligence', 'SEO analysis', 'tech stack detection', 'traffic estimation', 'domain analysis', 'API'],
   authors: [{ name: 'SiteJSON' }],
   creator: 'SiteJSON',
@@ -55,7 +55,7 @@ export const buildBaseMetadata = (): Metadata => ({
     type: 'website',
     siteName,
     title: `${siteName} — Website Intelligence, Structured Data`,
-    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and structured site signals. Enrich your data in under 200ms.',
+    description: 'Browse website intelligence by market, technology, and topic. Open live reports with traffic, SEO, technology, and trust signals.',
     images: [defaultOGImage],
     locale: 'en_US',
   },
@@ -64,7 +64,7 @@ export const buildBaseMetadata = (): Metadata => ({
     site: '@sitejson',
     creator: '@sitejson',
     title: `${siteName} — Website Intelligence, Structured Data`,
-    description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and structured site signals. Enrich your data in under 200ms.',
+    description: 'Browse website intelligence by market, technology, and topic. Open live reports with traffic, SEO, technology, and trust signals.',
     images: [`${BASE_URL}/api/og`],
   },
   verification: {
@@ -78,13 +78,41 @@ export const buildBaseMetadata = (): Metadata => ({
   },
 });
 
-export const buildReportMetadata = (domain: string, data?: { traffic?: number }): Metadata => {
+export const buildHomeMetadata = (): Metadata => ({
+  title: 'Compare Websites, Traffic, SEO & Tech Stack Data',
+  description: 'Compare websites, browse competitor directories, and open live domain reports with traffic estimates, SEO structure, tech stack, and trust signals.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: `Compare Websites, Traffic, SEO & Tech Stack Data | ${siteName}`,
+    description: 'Compare websites, browse competitor directories, and open live domain reports with traffic estimates, SEO structure, tech stack, and trust signals.',
+    url: '/',
+    type: 'website',
+    images: [defaultOGImage],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Compare Websites, Traffic, SEO & Tech Stack Data | ${siteName}`,
+    description: 'Compare websites, browse competitor directories, and open live domain reports with traffic estimates, SEO structure, tech stack, and trust signals.',
+    images: [`${BASE_URL}/api/og`],
+  },
+});
+
+export const buildReportMetadata = (
+  domain: string,
+  data?: { traffic?: number },
+  options?: { index?: boolean; follow?: boolean },
+): Metadata => {
   const normalizedDomain = normalizeDomainInput(domain);
   const trafficText = data?.traffic ? ` and ${(data.traffic / 1000000).toFixed(1)}M monthly visits` : '';
+  const index = options?.index ?? true;
+  const follow = options?.follow ?? true;
 
   return {
     title: `${normalizedDomain} Website Intelligence Report`,
     description: `Comprehensive analysis of ${normalizedDomain}${trafficText}. SEO metrics, tech stack, traffic data, and structured site signals.`,
+    robots: { index, follow },
     alternates: {
       canonical: `/data/${normalizedDomain}`,
     },
@@ -123,7 +151,7 @@ export const buildSitePageMetadata = (domain: string): Metadata => {
 
 export const buildDataSubPageMetadata = (
   domain: string,
-  subPage: 'traffic' | 'seo' | 'tech' | 'business',
+  subPage: 'traffic' | 'seo' | 'tech' | 'business' | 'alternatives',
 ): Metadata => {
   const normalizedDomain = normalizeDomainInput(domain);
   const titles: Record<string, string> = {
@@ -131,19 +159,23 @@ export const buildDataSubPageMetadata = (
     seo: `${normalizedDomain} SEO Analysis & Structure`,
     tech: `${normalizedDomain} Technology Stack & Infrastructure`,
     business: `${normalizedDomain} Business Intelligence`,
+    alternatives: `${normalizedDomain} Alternatives & Similar Sites`,
   };
   const descriptions: Record<string, string> = {
     traffic: `Monthly visits, bounce rate, traffic sources, top regions, and keywords for ${normalizedDomain}.`,
     seo: `Heading structure, link analysis, technical files, and taxonomy for ${normalizedDomain}.`,
     tech: `Technology stack, DNS records, infrastructure details, and provider health for ${normalizedDomain}.`,
     business: `AI business intelligence, trust assessment, advertising, and monetization data for ${normalizedDomain}.`,
+    alternatives: `Discover alternatives and competitors to ${normalizedDomain}. Compare similar websites by traffic, trust score, and technology stack.`,
   };
   const ogImages: Record<string, string> = {
     traffic: `${BASE_URL}/api/og?domain=${encodeURIComponent(normalizedDomain)}&type=traffic`,
     seo: `${BASE_URL}/api/og?domain=${encodeURIComponent(normalizedDomain)}&type=seo`,
     tech: `${BASE_URL}/api/og?domain=${encodeURIComponent(normalizedDomain)}&type=tech`,
     business: `${BASE_URL}/api/og?domain=${encodeURIComponent(normalizedDomain)}&type=business`,
+    alternatives: `${BASE_URL}/api/og?domain=${encodeURIComponent(normalizedDomain)}&type=alternatives`,
   };
+
   return {
     title: titles[subPage],
     description: descriptions[subPage],
@@ -171,15 +203,191 @@ export const buildDataSubPageMetadata = (
   };
 };
 
-export const buildDirectoryMetadata = (type: string, slug: string): Metadata => {
+export const buildDirectoryHubMetadata = (): Metadata => ({
+  title: 'Website Directory Hub',
+  description: 'Browse SiteJSON directories by category, technology, and topic. Use the hub to move from discovery into live domain reports.',
+  alternates: {
+    canonical: '/directory',
+  },
+  openGraph: {
+    title: `Website Directory Hub | ${siteName}`,
+    description: 'Browse SiteJSON directories by category, technology, and topic. Use the hub to move from discovery into live domain reports.',
+    url: '/directory',
+    type: 'website',
+    images: [{
+      url: `${BASE_URL}/api/og?type=directory` ,
+      width: 1200,
+      height: 630,
+      alt: 'SiteJSON directory hub',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Website Directory Hub | ${siteName}`,
+    description: 'Browse SiteJSON directories by category, technology, and topic. Use the hub to move from discovery into live domain reports.',
+    images: [`${BASE_URL}/api/og?type=directory`],
+  },
+});
+
+export const buildInsightsMetadata = (): Metadata => ({
+  title: 'Global Website Insights',
+  description: 'Aggregated statistics across indexed websites: traffic coverage, score distribution, top categories, technologies, and topics.',
+  alternates: {
+    canonical: '/insights',
+  },
+  openGraph: {
+    title: `Global Website Insights | ${siteName}`,
+    description: 'Aggregated statistics across indexed websites: traffic coverage, score distribution, top categories, technologies, and topics.',
+    url: '/insights',
+    type: 'website',
+    images: [{
+      url: `${BASE_URL}/api/og?type=insights`,
+      width: 1200,
+      height: 630,
+      alt: 'SiteJSON global insights',
+    }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `Global Website Insights | ${siteName}`,
+    description: 'Aggregated statistics across indexed websites: traffic coverage, score distribution, top categories, technologies, and topics.',
+    images: [`${BASE_URL}/api/og?type=insights`],
+  },
+});
+
+export const buildDirectoryTypeHubMetadata = (type: DirectoryType): Metadata => {
+  const displayType = toDisplayLabel(type);
+
+  return {
+    title: `${displayType} Directory Hub`,
+    description: `Browse SiteJSON ${type} directories, preview live domains, and move into detailed reports without leaving the browse flow.`,
+    alternates: {
+      canonical: `/directory/${type}`,
+    },
+    openGraph: {
+      title: `${displayType} Directory Hub | ${siteName}`,
+      description: `Browse SiteJSON ${type} directories, preview live domains, and move into detailed reports without leaving the browse flow.`,
+      url: `/directory/${type}`,
+      type: 'website',
+      images: [{
+        url: `${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(type)}`,
+        width: 1200,
+        height: 630,
+        alt: `${displayType} directory hub`,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${displayType} Directory Hub | ${siteName}`,
+      description: `Browse SiteJSON ${type} directories, preview live domains, and move into detailed reports without leaving the browse flow.`,
+      images: [`${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(type)}`],
+    },
+  };
+};
+
+export const buildCompareMetadata = (
+  domainA: string,
+  domainB: string,
+  options?: { index?: boolean; follow?: boolean },
+): Metadata => {
+  const a = normalizeDomainInput(domainA);
+  const b = normalizeDomainInput(domainB);
+  const [first, second] = a < b ? [a, b] : [b, a];
+  const path = `/compare/${first}/vs/${second}`;
+  const index = options?.index ?? true;
+  const follow = options?.follow ?? true;
+
+  return {
+    title: `${first} vs ${second} — Compare Website Traffic, SEO & Tech Stack`,
+    description: `Compare ${first} vs ${second} with estimated traffic, SEO structure, detected tech stack, trust score, and category signals.`,
+    robots: { index, follow },
+    alternates: {
+      canonical: path,
+    },
+    openGraph: {
+      title: `${first} vs ${second} — Compare Website Traffic, SEO & Tech Stack | ${siteName}`,
+      description: `Compare ${first} vs ${second} with estimated traffic, SEO structure, detected tech stack, trust score, and category signals.`,
+      url: path,
+      type: 'article',
+      images: [defaultOGImage],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${first} vs ${second} — Compare Website Traffic, SEO & Tech Stack | ${siteName}`,
+      description: `Compare ${first} vs ${second} with estimated traffic, SEO structure, detected tech stack, trust score, and category signals.`,
+      images: [`${BASE_URL}/api/og`],
+    },
+  };
+};
+
+export const buildPaginatedDirectoryMetadata = (
+  type: string,
+  slug: string,
+  pageNum: number,
+  totalPages: number,
+): Metadata => {
+  const normalizedType = type.trim().toLowerCase();
+  const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
+  const display = toDisplayLabel(normalizedSlug) || normalizedSlug;
+  const label = normalizedType === 'technology' ? 'built with' : 'in';
+  const basePath = `/directory/${normalizedType}/${normalizedSlug}`;
+  const path = `${basePath}/page/${pageNum}`;
+
+  const alternates: Record<string, string> = { canonical: path };
+  if (pageNum === 2) {
+    alternates.prev = basePath;
+  } else if (pageNum > 2) {
+    alternates.prev = `${basePath}/page/${pageNum - 1}`;
+  }
+  if (pageNum < totalPages) {
+    alternates.next = `${basePath}/page/${pageNum + 1}`;
+  }
+
+  return {
+    title: `Top ${display} Websites — Page ${pageNum}`,
+    description: `Page ${pageNum} of the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
+    robots: { index: true, follow: true },
+    alternates,
+    openGraph: {
+      title: `Top ${display} Websites — Page ${pageNum} | ${siteName}`,
+      description: `Page ${pageNum} of the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
+      url: path,
+      type: 'website',
+      images: [{
+        url: `${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(normalizedSlug)}`,
+        width: 1200,
+        height: 630,
+        alt: `Top ${display} websites directory — page ${pageNum}`,
+      }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `Top ${display} Websites — Page ${pageNum} | ${siteName}`,
+      description: `Page ${pageNum} of the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
+      images: [`${BASE_URL}/api/og?type=directory&category=${encodeURIComponent(normalizedSlug)}`],
+    },
+  };
+};
+
+export const buildDirectoryMetadata = (
+  type: string,
+  slug: string,
+  options?: { index?: boolean },
+): Metadata => {
   const normalizedType = type.trim().toLowerCase();
   const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
   const display = toDisplayLabel(normalizedSlug) || normalizedSlug;
   const displayType = toDisplayLabel(normalizedType) || normalizedType;
   const label = normalizedType === 'technology' ? 'built with' : 'in';
+  const index = options?.index ?? true;
+
   return {
     title: `Top ${display} Websites — ${displayType} Directory`,
     description: `Discover the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
+    robots: {
+      index,
+      follow: true,
+    },
     alternates: {
       canonical: `/directory/${normalizedType}/${normalizedSlug}`,
     },

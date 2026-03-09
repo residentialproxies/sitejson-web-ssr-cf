@@ -179,6 +179,7 @@ describe('JSON-LD generators', () => {
       expect(types).toContain('WebSite');
       expect(types).toContain('WebPage');
       expect(types).toContain('SoftwareApplication');
+      expect(types).toContain('Dataset');
       expect(types).toContain('FAQPage');
     });
   });
@@ -219,6 +220,43 @@ describe('JSON-LD generators', () => {
       expect(webpage.url).toBe(`${BASE}/data/blog.sitejson.com`);
       expect(breadcrumb.itemListElement[1].name).toBe('blog.sitejson.com');
       expect(breadcrumb.itemListElement[1].item).toBe(`${BASE}/data/blog.sitejson.com`);
+    });
+
+    it('includes ItemList schema when subPage is alternatives with items', () => {
+      const alternatives = [
+        { domain: 'alt1.com', title: 'Alt One', rank: 100 },
+        { domain: 'alt2.com', score: 80 },
+      ];
+      const result = generateDataPageJsonLd({
+        domain: 'test.com',
+        report,
+        subPage: 'alternatives',
+        alternatives,
+      });
+      const parsed = JSON.parse(result);
+      expect(parsed['@graph']).toHaveLength(4); // WebPage + Breadcrumb + Dataset + ItemList
+      const itemList = parsed['@graph'].find((i: { '@type': string }) => i['@type'] === 'ItemList');
+      expect(itemList).toBeDefined();
+      expect(itemList.name).toBe('Alternatives to test.com');
+      expect(itemList.numberOfItems).toBe(2);
+      expect(itemList.itemListElement).toHaveLength(2);
+      expect(itemList.itemListElement[0].position).toBe(1);
+      expect(itemList.itemListElement[0].name).toBe('Alt One');
+      expect(itemList.itemListElement[0].url).toBe(`${BASE}/data/alt1.com`);
+      expect(itemList.itemListElement[1].name).toBe('alt2.com');
+    });
+
+    it('omits ItemList when subPage is alternatives but no items', () => {
+      const result = generateDataPageJsonLd({
+        domain: 'test.com',
+        report,
+        subPage: 'alternatives',
+        alternatives: [],
+      });
+      const parsed = JSON.parse(result);
+      expect(parsed['@graph']).toHaveLength(3); // WebPage + Breadcrumb + Dataset
+      const itemList = parsed['@graph'].find((i: { '@type': string }) => i['@type'] === 'ItemList');
+      expect(itemList).toBeUndefined();
     });
   });
 

@@ -1,4 +1,4 @@
-import type { SiteReport } from '@/lib/api-client/types';
+import type { AlternativeSite, SiteReport } from '@/lib/api-client/types';
 import { FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA, PRO_RATE_LIMIT_RPM } from '@/lib/auth/session';
 import { normalizeDirectorySlug, normalizeDomainInput } from '@/lib/utils';
 
@@ -152,7 +152,7 @@ export function generateWebSiteJsonLd(): JsonLdWebSite {
     description: 'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
     potentialAction: {
       '@type': 'SearchAction',
-      target: toAbsoluteUrl('/site/{search_term_string}'),
+      target: toAbsoluteUrl('/data/{search_term_string}'),
       'query-input': 'required name=search_term_string',
     },
   };
@@ -285,51 +285,54 @@ export function generateHomepageJsonLd(): string {
   const organization = generateOrganizationJsonLd();
   const website = generateWebSiteJsonLd();
   const webpage = generateWebPageJsonLd(
-    'SiteJSON — Website Intelligence, Structured Data',
-    'Website intelligence API for traffic estimates, tech stack detection, SEO analysis, and trust signals.',
+    'SiteJSON — Website Intelligence API, Directory, and Live Reports',
+    'Browse website intelligence by category, technology, and topic, then open live reports with traffic, SEO, tech stack, and trust signals.',
     '/'
   );
   const software = generateSoftwareApplicationJsonLd();
+  const dataset = generateDatasetJsonLd('Website Intelligence Directory', {
+    taxonomy: {
+      tags: ['category directories', 'technology directories', 'topic research'],
+    },
+    meta: {
+      techStackDetected: ['traffic estimates', 'SEO structure', 'trust signals'],
+    },
+  });
 
   const faqs = generateFAQJsonLd([
     {
       question: 'What is SiteJSON?',
-      answer: 'SiteJSON is a website intelligence API that provides structured data about any domain, including traffic estimates, technology stack detection, SEO analysis, and trust signals.',
+      answer: 'SiteJSON is a website intelligence platform that helps analysts browse directories and open live domain reports with traffic, SEO, technology, business, and trust signals.',
     },
     {
-      question: 'How accurate are the traffic estimates?',
-      answer: 'Our traffic estimates combine multiple data sources including Cloudflare Radar and proprietary algorithms to provide highly accurate monthly visit counts, typically within 10-15% of actual values.',
+      question: 'How should I use the site if I am not ready for the API?',
+      answer: 'Start with the directory hub, choose a category, technology, or topic path, then open live report pages to compare real domains before deciding whether you need API access.',
     },
     {
       question: 'What data does SiteJSON provide?',
-      answer: 'SiteJSON provides comprehensive website intelligence including: traffic statistics (monthly visits, bounce rate, visit duration), SEO metrics (heading structure, link analysis), technology stack detection, DNS and infrastructure details, AI-powered business classification, and legitimacy scoring.',
+      answer: 'SiteJSON provides website intelligence including traffic statistics, ranking signals, SEO structure, technology stack detection, business analysis, and AI-assisted trust indicators.',
     },
     {
       question: 'Is there a free tier?',
       answer: `SiteJSON API access requires a key. GitHub login grants ${FREE_STARTER_CREDITS} one-time starter requests and a signed API key. Pro adds ${PRO_MONTHLY_QUOTA} requests per billing cycle at ${PRO_RATE_LIMIT_RPM} req/min and is manually activated until checkout launches.`,
     },
-    {
-      question: 'How do I integrate SiteJSON into my application?',
-      answer: 'SiteJSON provides a simple REST API with JSON responses. You can make HTTP requests to our endpoints using your API key. We offer SDKs for popular languages including Node.js, Python, and Go.',
-    },
   ]);
 
-  return combineJsonLd([organization, website, webpage, software, faqs]);
+  return combineJsonLd([organization, website, webpage, software, dataset, faqs]);
 }
 
-/**
- * Generate complete data page JSON-LD with WebPage, BreadcrumbList, and Dataset
- */
 export function generateDataPageJsonLd({
   domain,
   report,
   updatedAt,
   subPage,
+  alternatives,
 }: {
   domain: string;
   report: SiteReport;
   updatedAt?: string;
-  subPage?: 'traffic' | 'seo' | 'tech' | 'business';
+  subPage?: 'traffic' | 'seo' | 'tech' | 'business' | 'alternatives';
+  alternatives?: AlternativeSite[];
 }): string {
   const normalizedDomain = normalizeDomainInput(domain);
   const path = subPage ? `/data/${normalizedDomain}/${subPage}` : `/data/${normalizedDomain}`;
@@ -355,37 +358,150 @@ export function generateDataPageJsonLd({
   const breadcrumb = generateBreadcrumbJsonLd(breadcrumbItems);
   const dataset = generateDatasetJsonLd(normalizedDomain, report);
 
-  return combineJsonLd([webpage, breadcrumb, dataset]);
+  const objects: unknown[] = [webpage, breadcrumb, dataset];
+
+  if (subPage === 'alternatives' && alternatives && alternatives.length > 0) {
+    objects.push(generateItemListJsonLd(normalizedDomain, alternatives));
+  }
+
+  return combineJsonLd(objects);
 }
 
-/**
- * Generate directory page JSON-LD
- */
-export function generateDirectoryPageJsonLd({
-  type,
-  slug,
-}: {
-  type: string;
-  slug: string;
-}): string {
+export function generateItemListJsonLd(
+  domain: string,
+  alternatives: AlternativeSite[],
+): {
+  '@context': 'https://schema.org';
+  '@type': 'ItemList';
+  name: string;
+  numberOfItems: number;
+  itemListElement: Array<{
+    '@type': 'ListItem';
+    position: number;
+    name: string;
+    url: string;
+  }>;
+} {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `Alternatives to ${domain}`,
+    numberOfItems: alternatives.length,
+    itemListElement: alternatives.map((alt, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: alt.title ?? alt.domain,
+      url: toAbsoluteUrl(`/data/${alt.domain}`),
+    })),
+  };
+}
+
+export function generateDirectoryHubJsonLd(): string {
+  const webpage = generateWebPageJsonLd(
+    'Website Directory Hub',
+    'Browse SiteJSON directories by category, technology, and topic, then open live domain reports.',
+    '/directory'
+  );
+
+  const breadcrumb = generateBreadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Directory' },
+  ]);
+
+  return combineJsonLd([webpage, breadcrumb]);
+}
+
+export function generateDirectoryTypeHubJsonLd(type: string, slug: string): string {
   const normalizedType = type.trim().toLowerCase();
   const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
-  const path = `/directory/${normalizedType}/${normalizedSlug}`;
   const displayType = toDisplayLabel(normalizedType);
   const displaySlug = toDisplayLabel(normalizedSlug);
 
   const webpage = generateWebPageJsonLd(
-    `Top ${displaySlug} Websites — ${displayType} Directory`,
-    `Discover the most popular websites ${normalizedType === 'technology' ? 'built with' : 'in'} ${displaySlug}. Ranked by traffic, authority, and AI analysis.`,
-    path
+    `${displayType} Directory Hub`,
+    `Browse ${displayType.toLowerCase()} directories and move into live domain reports from a utility-first hub page.`,
+    `/directory/${normalizedType}`
   );
 
   const breadcrumb = generateBreadcrumbJsonLd([
     { name: 'Home', path: '/' },
     { name: 'Directory', path: '/directory' },
-    { name: displayType, path: `/directory/${normalizedType}` },
-    { name: displaySlug },
+    { name: displayType },
+  ]);
+
+  const faq = generateFAQJsonLd([
+    {
+      question: `How do I use the ${displayType.toLowerCase()} directory hub?`,
+      answer: `Start with the featured ${displaySlug} example, open a few live reports, and then pivot into another browse path if you need broader context.`,
+    },
+  ]);
+
+  return combineJsonLd([webpage, breadcrumb, faq]);
+}
+
+export function generateComparePageJsonLd(domainA: string, domainB: string): string {
+  const a = normalizeDomainInput(domainA);
+  const b = normalizeDomainInput(domainB);
+  const [first, second] = a < b ? [a, b] : [b, a];
+  const path = `/compare/${first}/vs/${second}`;
+
+  const webpage = generateWebPageJsonLd(
+    `${first} vs ${second} — Website Comparison`,
+    `Compare ${first} and ${second} side by side: traffic, technology, trust score, and more.`,
+    path,
+  );
+
+  const breadcrumb = generateBreadcrumbJsonLd([
+    { name: 'Home', path: '/' },
+    { name: 'Compare' },
+    { name: `${first} vs ${second}` },
   ]);
 
   return combineJsonLd([webpage, breadcrumb]);
+}
+
+export function generateDirectoryPageJsonLd({
+  type,
+  slug,
+  faqs,
+  pageNum,
+}: {
+  type: string;
+  slug: string;
+  faqs?: Array<{ question: string; answer: string }>;
+  pageNum?: number;
+}): string {
+  const normalizedType = type.trim().toLowerCase();
+  const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
+  const basePath = `/directory/${normalizedType}/${normalizedSlug}`;
+  const path = pageNum && pageNum > 1 ? `${basePath}/page/${pageNum}` : basePath;
+  const displayType = toDisplayLabel(normalizedType);
+  const displaySlug = toDisplayLabel(normalizedSlug);
+  const pageSuffix = pageNum && pageNum > 1 ? ` — Page ${pageNum}` : '';
+
+  const webpage = generateWebPageJsonLd(
+    `Top ${displaySlug} Websites — ${displayType} Directory${pageSuffix}`,
+    `Discover the most popular websites ${normalizedType === 'technology' ? 'built with' : 'in'} ${displaySlug}. Ranked by traffic, authority, and AI analysis.`,
+    path
+  );
+
+  const breadcrumbItems: Array<{ name: string; path?: string }> = [
+    { name: 'Home', path: '/' },
+    { name: 'Directory', path: '/directory' },
+    { name: displayType, path: `/directory/${normalizedType}` },
+  ];
+  if (pageNum && pageNum > 1) {
+    breadcrumbItems.push({ name: displaySlug, path: basePath });
+    breadcrumbItems.push({ name: `Page ${pageNum}` });
+  } else {
+    breadcrumbItems.push({ name: displaySlug });
+  }
+  const breadcrumb = generateBreadcrumbJsonLd(breadcrumbItems);
+
+  const objects: unknown[] = [webpage, breadcrumb];
+  if (faqs && faqs.length > 0) {
+    objects.push(generateFAQJsonLd(faqs));
+  }
+
+  return combineJsonLd(objects);
 }

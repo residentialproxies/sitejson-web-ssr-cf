@@ -39,41 +39,65 @@ describe('sitemap route', () => {
     vi.unstubAllGlobals();
   });
 
-  it('builds sitemap with normalized and deduplicated domain/directory URLs', async () => {
+  it('builds sitemap with summary-driven directories, insights, and normalized domains', async () => {
     process.env.PUBLIC_SITE_BASE_URL = 'https://sitejson.com/';
     process.env.SITEJSON_API_BASE_URL = 'https://api.sitejson.com';
     process.env.SITEJSON_API_KEY = 'test-key';
 
     mockFetch.mockImplementation(async (url: string | URL) => {
       const target = url.toString();
-      if (target.includes('/api/v1/directory/category/technology')) {
+      if (target.includes('/api/v1/directory/category?limit=')) {
         return toJsonResponse({
           ok: true,
           data: {
-            items: [
-              { domain: ' Example.COM ' },
-              { domain: 'https://example.com/path' },
+            slugs: [
+              { slug: 'technology', count: 80, topDomain: ' Example.COM ' },
+              { slug: 'marketing', count: 12, topDomain: 'https://marketing.example/path' },
             ],
           },
         });
       }
 
-      if (target.includes('/api/v1/directory/technology/react')) {
+      if (target.includes('/api/v1/directory/technology?limit=')) {
         return toJsonResponse({
           ok: true,
           data: {
-            items: [{ domain: 'Blog.SiteJson.COM' }],
+            slugs: [
+              { slug: 'react', count: 55, topDomain: 'Blog.SiteJson.COM' },
+            ],
           },
         });
       }
 
-      if (target.includes('/api/v1/directory/topic/finance')) {
+      if (target.includes('/api/v1/directory/topic?limit=')) {
         return toJsonResponse({
           ok: true,
           data: {
-            items: [{ domain: 'example.com' }],
+            slugs: [
+              { slug: 'finance', count: 30, topDomain: 'finance.example' },
+            ],
           },
         });
+      }
+
+      if (target.includes('/api/v1/directory/category/technology?page=1&page_size=500')) {
+        return toJsonResponse({
+          ok: true,
+          data: {
+            items: [
+              { domain: ' Example.COM ', updated_at: '2026-02-01T00:00:00Z' },
+              { domain: 'https://example.com/path', updated_at: '2026-02-03T00:00:00Z' },
+            ],
+          },
+        });
+      }
+
+      if (target.includes('/api/v1/directory/technology/react?page=1&page_size=500')) {
+        return toJsonResponse({ ok: true, data: { items: [{ domain: 'Blog.SiteJson.COM' }] } });
+      }
+
+      if (target.includes('/api/v1/directory/topic/finance?page=1&page_size=500')) {
+        return toJsonResponse({ ok: true, data: { items: [{ domain: 'finance.example' }] } });
       }
 
       return toJsonResponse({}, false);
@@ -82,36 +106,24 @@ describe('sitemap route', () => {
     const sitemap = await importSitemap();
     const entries = await sitemap();
     const urls = entries.map((entry) => entry.url);
+    const exampleEntry = entries.find((entry) => entry.url === 'https://sitejson.com/data/example.com');
 
-    expect(mockFetch).toHaveBeenCalledTimes(3);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.sitejson.com/api/v1/directory/category/technology?page=1&page_size=500',
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          accept: 'application/json',
-          'x-api-key': 'test-key',
-        }),
-      })
-    );
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.sitejson.com/api/v1/directory/technology/react?page=1&page_size=500',
-      expect.any(Object)
-    );
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.sitejson.com/api/v1/directory/topic/finance?page=1&page_size=500',
-      expect.any(Object)
-    );
-
+    expect(mockFetch).toHaveBeenCalledTimes(6);
     expect(urls).toContain('https://sitejson.com');
+    expect(urls).toContain('https://sitejson.com/insights');
     expect(urls).toContain('https://sitejson.com/rss.xml');
-    expect(urls).toContain('https://sitejson.com/directory');
-    expect(urls).toContain('https://sitejson.com/data/example.com');
-    expect(urls).toContain('https://sitejson.com/data/blog.sitejson.com');
     expect(urls).toContain('https://sitejson.com/directory/category/technology');
+    expect(urls).toContain('https://sitejson.com/directory/category/marketing');
     expect(urls).toContain('https://sitejson.com/directory/technology/react');
     expect(urls).toContain('https://sitejson.com/directory/topic/finance');
+    expect(urls).toContain('https://sitejson.com/directory/category/technology/page/2');
+    expect(urls).toContain('https://sitejson.com/directory/technology/react/page/2');
+    expect(urls).toContain('https://sitejson.com/data/example.com');
+    expect(urls).toContain('https://sitejson.com/data/blog.sitejson.com');
+    expect(urls).toContain('https://sitejson.com/data/finance.example');
     expect(urls.filter((url) => url === 'https://sitejson.com/data/example.com')).toHaveLength(1);
-    expect(urls.filter((url) => url === 'https://sitejson.com/directory/category/technology')).toHaveLength(1);
+    expect(exampleEntry?.lastModified).toEqual(new Date('2026-02-03T00:00:00Z'));
+    expect(urls.some((url) => url.includes('/compare/'))).toBe(false);
   });
 
   it('returns static pages when upstream APIs fail', async () => {
@@ -128,6 +140,7 @@ describe('sitemap route', () => {
       'https://sitejson.com/directory/category',
       'https://sitejson.com/directory/technology',
       'https://sitejson.com/directory/topic',
+      'https://sitejson.com/insights',
       'https://sitejson.com/rss.xml',
     ]);
   });

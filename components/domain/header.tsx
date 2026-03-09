@@ -2,9 +2,9 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { ExternalLink, Clock, RefreshCw } from 'lucide-react';
-import { cn, getRelativeTime, getScreenshotUrl, getFaviconUrl, generateBlurPlaceholder } from '@/lib/utils';
+import { Clock, ExternalLink, RefreshCw, ShieldCheck, BarChart3, Layers3 } from 'lucide-react';
 import type { SiteReport } from '@/lib/api-client/types';
+import { cn, formatNumber, generateBlurPlaceholder, getFaviconUrl, getRelativeTime, getScreenshotUrl } from '@/lib/utils';
 
 interface DomainHeaderProps {
   domain: string;
@@ -14,24 +14,28 @@ interface DomainHeaderProps {
   className?: string;
 }
 
+const factPillClass = 'inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold';
+
 export function DomainHeader({ domain, report, updatedAt, isStale, className }: DomainHeaderProps) {
-  const screenshotUrl = report.visual?.screenshotUrl
-    || getScreenshotUrl(domain, 'large', { format: 'webp', quality: 85 });
+  const screenshotUrl = report.visual?.screenshotUrl || getScreenshotUrl(domain, 'large', { format: 'webp', quality: 85 });
   const faviconUrl = getFaviconUrl(domain, 32);
   const techStack = report.meta?.techStackDetected ?? [];
   const blurPlaceholder = generateBlurPlaceholder(1280, 800);
+  const trustScore = report.aiAnalysis?.risk?.score;
+  const globalRank = report.radar?.globalRank ?? report.trafficData?.globalRank;
+  const category = report.taxonomy?.iabCategory;
+  const sentiment = report.aiAnalysis?.risk?.sentiment;
 
   return (
-    <div className={cn('bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden', className)}>
-      <div className="flex flex-col md:flex-row">
-        {/* Screenshot */}
-        <div className="md:w-80 lg:w-96 flex-shrink-0 border-b md:border-b-0 md:border-r border-gray-200">
-          <div className="relative aspect-[16/10] bg-gray-100">
+    <section className={cn('overflow-hidden rounded-[1.75rem] border border-slate-200 bg-white shadow-sm', className)}>
+      <div className="grid gap-0 lg:grid-cols-[380px_1fr]">
+        <div className="border-b border-slate-200 lg:border-b-0 lg:border-r">
+          <div className="relative aspect-[16/10] bg-slate-100">
             <Image
               src={screenshotUrl}
               alt={`Screenshot of ${domain}`}
               fill
-              sizes="(max-width: 768px) 100vw, 384px"
+              sizes="(max-width: 1024px) 100vw, 380px"
               className="object-cover object-top"
               placeholder="blur"
               blurDataURL={blurPlaceholder}
@@ -41,76 +45,82 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
           </div>
         </div>
 
-        {/* Meta Info */}
-        <div className="flex-1 p-4 md:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-2">
-                <Image
-                  src={faviconUrl}
-                  alt=""
-                  width={20}
-                  height={20}
-                  className="w-5 h-5 rounded-sm"
-                  unoptimized
-                />
-                <h1 className="text-xl font-semibold text-gray-900 truncate">{domain}</h1>
-                <a
-                  href={`https://${domain}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4" />
+        <div className="p-5 md:p-7">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <Image src={faviconUrl} alt="" width={20} height={20} className="h-5 w-5 rounded-sm" unoptimized />
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live website intelligence</p>
+              </div>
+              <div className="mt-3 flex items-center gap-2">
+                <h1 className="truncate text-2xl font-semibold text-slate-950 md:text-3xl">{domain}</h1>
+                <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition-colors hover:text-slate-700">
+                  <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
-              {report.meta?.title && (
-                <h2 className="text-base font-medium text-gray-800 mb-2 line-clamp-1">
-                  {report.meta.title}
-                </h2>
-              )}
-              {report.meta?.description && (
-                <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-                  {report.meta.description}
+              {report.meta?.title && <p className="mt-3 text-base font-medium text-slate-800">{report.meta.title}</p>}
+              {report.meta?.description && <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{report.meta.description}</p>}
+            </div>
+
+            <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 xl:min-w-[300px]">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Last refresh</p>
+                <p className="mt-2 flex items-center gap-2 text-sm font-medium text-slate-700">
+                  <Clock className="h-4 w-4 text-slate-400" />
+                  Updated {getRelativeTime(updatedAt)}
                 </p>
-              )}
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Analyst read</p>
+                <p className="mt-2 text-sm font-medium text-slate-700">{sentiment ?? 'In review'}</p>
+              </div>
             </div>
           </div>
 
-          {/* Tech Stack */}
-          {techStack.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {techStack.slice(0, 8).map((tech) => (
-                <span
-                  key={tech}
-                  className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700 border border-gray-200"
-                >
-                  {tech}
-                </span>
-              ))}
-              {techStack.length > 8 && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-50 text-gray-500">
-                  +{techStack.length - 8} more
-                </span>
-              )}
-            </div>
-          )}
-
-          {/* Last Updated */}
-          <div className="flex items-center gap-3 mt-4">
-            <div className="flex items-center gap-1.5 text-xs text-gray-400">
-              <Clock className="w-3.5 h-3.5" />
-              <span>Updated {getRelativeTime(updatedAt)}</span>
-            </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {typeof globalRank === 'number' && globalRank > 0 && (
+              <span className={`${factPillClass} border-blue-200 bg-blue-50 text-blue-700`}>
+                <BarChart3 className="mr-1.5 h-3.5 w-3.5" />#{formatNumber(globalRank)} global rank
+              </span>
+            )}
+            {typeof trustScore === 'number' && (
+              <span className={`${factPillClass} border-emerald-200 bg-emerald-50 text-emerald-700`}>
+                <ShieldCheck className="mr-1.5 h-3.5 w-3.5" />{trustScore}/100 trust
+              </span>
+            )}
+            {category && (
+              <span className={`${factPillClass} border-slate-200 bg-slate-50 text-slate-700`}>
+                {category}
+              </span>
+            )}
             {isStale && (
-              <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                <RefreshCw className="w-3 h-3" />
-                Stale
+              <span className={`${factPillClass} border-amber-200 bg-amber-50 text-amber-700`}>
+                <RefreshCw className="mr-1.5 h-3 w-3" />Stale snapshot
               </span>
             )}
           </div>
+
+          {techStack.length > 0 && (
+            <div className="mt-5 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                <Layers3 className="h-4 w-4" />Detected stack
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {techStack.slice(0, 8).map((tech) => (
+                  <span key={tech} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+                    {tech}
+                  </span>
+                ))}
+                {techStack.length > 8 && (
+                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
+                    +{techStack.length - 8} more
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </section>
   );
 }

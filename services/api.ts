@@ -228,9 +228,15 @@ export const fetchDirectoryListing = async (
   value: string,
   page = 1,
   pageSize = 24,
+  options?: { sort?: string; minScore?: number; hasTraffic?: boolean },
 ): Promise<DirectoryListingResult> => {
+  let qs = `page=${encodeURIComponent(String(page))}&page_size=${encodeURIComponent(String(pageSize))}`;
+  if (options?.sort) qs += `&sort=${encodeURIComponent(options.sort)}`;
+  if (options?.minScore !== undefined) qs += `&min_score=${options.minScore}`;
+  if (options?.hasTraffic) qs += `&has_traffic=true`;
+
   const response = await requestJson<BackendDirectoryResponse>(
-    `/api/sitejson/directory/${encodeURIComponent(type)}/${encodeURIComponent(value)}?page=${encodeURIComponent(String(page))}&page_size=${encodeURIComponent(String(pageSize))}`,
+    `/api/sitejson/directory/${encodeURIComponent(type)}/${encodeURIComponent(value)}?${qs}`,
   );
 
   if (response.status !== 200 || !response.body?.ok) {

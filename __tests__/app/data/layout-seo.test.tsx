@@ -1,16 +1,18 @@
 import React from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import DomainLayout from '@/app/data/[domain]/layout';
-import { getSiteReport, getSiteProviderSummary } from '@/lib/api-client/client';
-import { redirect } from 'next/navigation';
+import DomainLayout, { generateMetadata } from '@/app/data/[domain]/layout';
+import { getSiteAlternatives, getSiteReport, getSiteProviderSummary } from '@/lib/api-client/client';
+import { notFound, redirect } from 'next/navigation';
 
 vi.mock('next/navigation', () => ({
   redirect: vi.fn(),
+  notFound: vi.fn(),
 }));
 
 vi.mock('@/lib/api-client/client', () => ({
   getSiteReport: vi.fn(),
   getSiteProviderSummary: vi.fn(),
+  getSiteAlternatives: vi.fn(),
 }));
 
 describe('domain layout canonical SEO behavior', () => {
@@ -18,8 +20,31 @@ describe('domain layout canonical SEO behavior', () => {
     vi.clearAllMocks();
   });
 
+  it('marks missing reports as noindex in metadata', async () => {
+    vi.mocked(getSiteReport).mockResolvedValueOnce(null);
+
+    const metadata = await generateMetadata({
+      params: Promise.resolve({ domain: 'missing.com' }),
+    });
+
+    expect(metadata.robots).toEqual({ index: false, follow: false });
+    expect(metadata.alternates?.canonical).toBe('/data/missing.com');
+  });
+
+  it('calls notFound when the report does not exist', async () => {
+    vi.mocked(getSiteReport).mockResolvedValueOnce(null);
+
+    await DomainLayout({
+      children: <div>child</div>,
+      params: Promise.resolve({ domain: 'missing.com' }),
+    });
+
+    expect(notFound).toHaveBeenCalled();
+  });
+
   it('redirects non-canonical domain params to lowercase canonical route', async () => {
     vi.mocked(getSiteProviderSummary).mockResolvedValue(null);
+    vi.mocked(getSiteAlternatives).mockResolvedValue(null);
 
     const page = await DomainLayout({
       children: <div>child</div>,
@@ -44,6 +69,10 @@ describe('domain layout canonical SEO behavior', () => {
       domain: 'example.com',
       updatedAt: '2026-03-01T00:00:00Z',
       providers: [],
+    });
+    vi.mocked(getSiteAlternatives).mockResolvedValue({
+      algorithm: 'test',
+      items: [],
     });
 
     const page = await DomainLayout({
