@@ -1,13 +1,30 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getDirectory } from '@/lib/api-client/client';
+import { getDirectoryListingResult, getDirectoryStatsResult } from '@/lib/api-client/client';
 import { getDirectorySeed, isDirectoryType } from '@/lib/pseo';
+import {
+  evaluateDirectoryIndexability,
+  evaluatePaginatedDirectoryIndexability,
+} from '@/lib/seo/indexability';
 import { buildPaginatedDirectoryMetadata } from '@/lib/seo/metadata';
 import { generateDirectoryPageJsonLd } from '@/lib/seo/json-ld';
 import { normalizeDirectorySlug } from '@/lib/utils';
 import DirectoryContent from '../../directory-content';
 
 export const runtime = 'edge';
+
+const loadDirectoryListing = cache(
+  async (type: string, slug: string, pageNum: number) => getDirectoryListingResult(type, slug, pageNum, 24),
+);
+
+const loadBaseDirectoryListing = cache(
+  async (type: string, slug: string) => getDirectoryListingResult(type, slug, 1, 24),
+);
+
+const loadDirectoryStats = cache(
+  async (type: string, slug: string) => getDirectoryStatsResult(type, slug),
+);
 
 type PaginatedDirectoryPageProps = {
   params: Promise<{
@@ -26,12 +43,27 @@ export async function generateMetadata({ params }: PaginatedDirectoryPageProps):
 
   const seed = getDirectorySeed(type);
   const normalizedSlug = normalizeDirectorySlug(slug) || seed.slug;
-  const data = await getDirectory(type, normalizedSlug, 1, 1);
-  const total = data?.pagination?.total ?? 0;
-  const pageSize = data?.pagination?.page_size ?? 24;
-  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
+  const [baseListing, listing, statsResult] = await Promise.all([
+    loadBaseDirectoryListing(type, normalizedSlug),
+    loadDirectoryListing(type, normalizedSlug, pageNum),
+    loadDirectoryStats(type, normalizedSlug),
+  ]);
+  const totalPages = listing.data?.totalPages ?? 0;
+  const baseDecision = evaluateDirectoryIndexability(
+    baseListing.data,
+    statsResult.status === 'success' ? statsResult.data : null,
+  );
+  const decision = evaluatePaginatedDirectoryIndexability({
+    pageNum,
+    listing: listing.data,
+    baseDecision,
+  });
+  const metadata = buildPaginatedDirectoryMetadata(type, normalizedSlug, pageNum, totalPages, {
+    index: decision.index,
+    follow: decision.follow,
+  });
 
-  return buildPaginatedDirectoryMetadata(type, normalizedSlug, pageNum, totalPages);
+  return metadata;
 }
 
 export default async function PaginatedDirectoryPage({ params }: PaginatedDirectoryPageProps) {
@@ -64,13 +96,10 @@ export default async function PaginatedDirectoryPage({ params }: PaginatedDirect
     return null;
   }
 
-  const data = await getDirectory(normalizedType, safeSlug, pageNum, 24);
-  const items = data?.items ?? [];
-  const total = data?.pagination?.total ?? 0;
-  const pageSize = data?.pagination?.page_size ?? 24;
-  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
+  const listing = await loadDirectoryListing(normalizedType, safeSlug, pageNum);
+  const totalPages = listing.data?.totalPages ?? 0;
 
-  if (pageNum > totalPages) {
+  if ((listing.status === 'success' || listing.status === 'empty') && pageNum > totalPages) {
     notFound();
     return null;
   }
@@ -83,10 +112,10 @@ export default async function PaginatedDirectoryPage({ params }: PaginatedDirect
       <DirectoryContent
         mode={normalizedType}
         value={safeSlug}
-        initialItems={items}
-        initialTotal={total}
-        initialTotalPages={totalPages}
-        pageSize={pageSize}
+        initialListing={listing.data ?? { items: [], page: pageNum, pageSize: 24, total: 0, totalPages: 0 }}
+        initialStatus={listing.status}
+        initialMessage={listing.status === 'unavailable' || listing.status === 'timeout' ? listing.message : null}
+        pageSize={listing.data?.pageSize ?? 24}
         initialPage={pageNum}
       />
     </>

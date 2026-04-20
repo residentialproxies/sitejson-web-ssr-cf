@@ -5,7 +5,13 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { BarChart3, ChevronRight, Hash, Layers, Tag } from 'lucide-react';
 import { fetchDirectoryListing } from '@/services/api';
-import type { DirectoryItem, DirectoryStats } from '@/lib/api-client/types';
+import type {
+  DirectoryDataStatus,
+  DirectoryItem,
+  DirectoryListingData,
+  DirectoryStats,
+} from '@/lib/api-client/types';
+import { DEFAULT_DIRECTORY_PAGE_SIZE } from '@/lib/api-client/directory-results';
 import { getDirectoryDetailFaqs, getDirectoryTypeLabel, getRelatedDirectoryLinks } from '@/lib/pseo';
 import { SiteCard } from '@/components/shared/SiteCard';
 import { FaqSection } from '@/components/shared/FaqSection';
@@ -19,10 +25,10 @@ type PageType = 'category' | 'technology' | 'topic';
 interface DirectoryContentProps {
   mode: PageType;
   value: string;
-  initialItems: DirectoryItem[];
-  initialTotal: number;
-  initialTotalPages: number;
-  pageSize: number;
+  initialListing: DirectoryListingData;
+  initialStatus: DirectoryDataStatus;
+  initialMessage?: string | null;
+  pageSize?: number;
   initialPage?: number;
   initialStats?: DirectoryStats | null;
 }
@@ -35,25 +41,27 @@ type DirectoryState = {
   page: number;
   totalPages: number;
   loading: boolean;
+  status: DirectoryDataStatus;
+  errorMessage: string | null;
 };
 
 type DirectoryAction =
   | {
       type: 'reset';
       payload: {
-        items: DirectoryItem[];
-        total: number;
-        totalPages: number;
+        listing: DirectoryListingData;
+        status: DirectoryDataStatus;
+        errorMessage?: string | null;
         page?: number;
       };
     }
   | { type: 'set-page'; page: number }
   | {
-      type: 'load-success';
+      type: 'apply-result';
       payload: {
-        items: DirectoryItem[];
-        total: number;
-        totalPages: number;
+        listing?: DirectoryListingData;
+        status: DirectoryDataStatus;
+        errorMessage?: string | null;
       };
     }
   | { type: 'set-loading'; loading: boolean };
@@ -71,35 +79,52 @@ const icons = {
 };
 
 function createInitialState(
-  initialItems: DirectoryItem[],
-  initialTotal: number,
-  initialTotalPages: number,
+  initialListing: DirectoryListingData,
+  initialStatus: DirectoryDataStatus,
+  initialMessage: string | null,
   initialPage = 1,
 ): DirectoryState {
   return {
-    items: initialItems,
-    total: initialTotal,
+    items: initialListing.items,
+    total: initialListing.total,
     page: initialPage,
-    totalPages: initialTotalPages,
+    totalPages: initialListing.totalPages,
     loading: false,
+    status: initialStatus,
+    errorMessage: initialMessage,
   };
 }
 
 function directoryReducer(state: DirectoryState, action: DirectoryAction): DirectoryState {
   switch (action.type) {
     case 'reset':
-      return createInitialState(action.payload.items, action.payload.total, action.payload.totalPages, action.payload.page);
+      return createInitialState(
+        action.payload.listing,
+        action.payload.status,
+        action.payload.errorMessage ?? null,
+        action.payload.page,
+      );
     case 'set-page':
-      return { ...state, page: action.page };
+      return { ...state, page: action.page, errorMessage: null };
     case 'set-loading':
       return { ...state, loading: action.loading };
-    case 'load-success':
+    case 'apply-result':
+      if (!action.payload.listing) {
+        return {
+          ...state,
+          loading: false,
+          status: action.payload.status,
+          errorMessage: action.payload.errorMessage ?? null,
+        };
+      }
       return {
         ...state,
-        items: action.payload.items,
-        total: action.payload.total,
-        totalPages: action.payload.totalPages,
+        items: action.payload.listing.items,
+        total: action.payload.listing.total,
+        totalPages: action.payload.listing.totalPages,
         loading: false,
+        status: action.payload.status,
+        errorMessage: action.payload.errorMessage ?? null,
       };
     default:
       return state;
@@ -191,16 +216,16 @@ function buildDirectoryStatsSnapshot(mode: PageType, value: string, items: Direc
 export default function DirectoryContent({
   mode,
   value,
-  initialItems,
-  initialTotal,
-  initialTotalPages,
-  pageSize,
+  initialListing,
+  initialStatus,
+  initialMessage = null,
+  pageSize = DEFAULT_DIRECTORY_PAGE_SIZE,
   initialPage = 1,
   initialStats,
 }: DirectoryContentProps) {
   const [state, dispatch] = useReducer(
     directoryReducer,
-    createInitialState(initialItems, initialTotal, initialTotalPages, initialPage),
+    createInitialState(initialListing, initialStatus, initialMessage, initialPage),
   );
 
   const [sort, setSort] = useState<SortOption>('rank');
@@ -212,11 +237,12 @@ export default function DirectoryContent({
   const canGoPrev = state.page > 1;
   const canGoNext = state.totalPages > 0 && state.page < state.totalPages;
   const faqs = getDirectoryDetailFaqs(mode, value);
+  const hasUnavailableState = state.status === 'unavailable' || state.status === 'timeout';
 
   const isDefaultFilters = sort === 'rank' && minScore === '' && !hasTraffic;
-  const sidebarItems = isDefaultFilters ? initialItems : state.items;
+  const sidebarItems = state.items;
   const sidebarStats = isDefaultFilters
-    ? (initialStats ?? buildDirectoryStatsSnapshot(mode, value, initialItems))
+    ? (initialStats ?? buildDirectoryStatsSnapshot(mode, value, initialListing.items))
     : buildDirectoryStatsSnapshot(mode, value, state.items);
   const relatedLinks = getRelatedDirectoryLinks({ type: mode, slug: value, items: sidebarItems, stats: sidebarStats ?? null, limit: 6 });
 
@@ -224,13 +250,13 @@ export default function DirectoryContent({
     dispatch({
       type: 'reset',
       payload: {
-        items: initialItems,
-        total: initialTotal,
-        totalPages: initialTotalPages,
+        listing: initialListing,
+        status: initialStatus,
+        errorMessage: initialMessage,
         page: initialPage,
       },
     });
-  }, [initialItems, initialTotal, initialTotalPages, initialPage, mode, value]);
+  }, [initialListing, initialMessage, initialPage, initialStatus, mode, value]);
 
   useEffect(() => {
     if (state.page === initialPage && filterVersion === 0) {
@@ -249,13 +275,29 @@ export default function DirectoryContent({
     fetchDirectoryListing(mode, value, state.page, pageSize, options)
       .then((data) => {
         if (!active) return;
-        const nextData = data ?? { items: [], total: 0, totalPages: 0 };
+        if (data.status === 'unavailable' || data.status === 'timeout') {
+          dispatch({
+            type: 'apply-result',
+            payload: {
+              status: data.status,
+              errorMessage: data.message,
+            },
+          });
+          return;
+        }
+
+        const nextListing = data.data ?? {
+          items: [],
+          page: state.page,
+          pageSize,
+          total: 0,
+          totalPages: 0,
+        };
         dispatch({
-          type: 'load-success',
+          type: 'apply-result',
           payload: {
-            items: nextData.items,
-            total: nextData.total,
-            totalPages: nextData.totalPages,
+            listing: nextListing,
+            status: data.status,
           },
         });
       })
@@ -312,24 +354,38 @@ export default function DirectoryContent({
 
                 <div className="mt-8 grid gap-4 md:grid-cols-3">
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Indexed sites</p>
-                    <p className="mt-2 font-mono text-3xl font-bold text-slate-950">{initialTotal.toLocaleString()}</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Use the list to move from a broad cluster into a small report shortlist.</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {isDefaultFilters ? 'Cluster total' : 'Filtered results'}
+                    </p>
+                    <p className="mt-2 font-mono text-3xl font-bold text-slate-950">{state.total.toLocaleString()}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {isDefaultFilters
+                        ? 'Use the full cluster to move from a broad theme into a smaller report shortlist.'
+                        : 'These counts reflect the current filters, not the full cluster.'}
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Coverage</p>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+                      {isDefaultFilters ? 'Cluster coverage' : 'Filtered coverage'}
+                    </p>
                     <p className="mt-2 flex items-center gap-2 text-lg font-semibold text-slate-900">
                       <BarChart3 className="h-4 w-4 text-clay-600" />
-                      {initialStats?.hasTrafficData ?? 0} with traffic data
+                      {sidebarStats?.hasTrafficData ?? 0} with traffic data
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">Traffic coverage tells you how many sites in this cluster already support stronger prioritization work.</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      Traffic coverage tells you how many sites in view already support stronger prioritization work.
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Fastest analyst move</p>
                     <p className="mt-2 text-lg font-semibold text-slate-900">
-                      {initialItems[0]?.domain ? `Open ${initialItems[0].domain}` : `Browse ${displayValue}`}
+                      {sidebarItems[0]?.domain ? `Open ${sidebarItems[0].domain}` : `Browse ${displayValue}`}
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{initialItems[1]?.domain ? `Then compare it with ${initialItems[1].domain} to tell whether the first result is representative.` : `Then pivot into an adjacent browse path or related report once more sites are indexed.`}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                      {sidebarItems[1]?.domain
+                        ? `Then compare it with ${sidebarItems[1].domain} to tell whether the first result is representative.`
+                        : `Then pivot into an adjacent browse path or related report once more sites are indexed.`}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -390,11 +446,35 @@ export default function DirectoryContent({
                 </div>
               </div>
 
+              {hasUnavailableState && state.errorMessage && state.items.length > 0 && (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  {state.errorMessage} Showing the last successful directory results while you retry.
+                </div>
+              )}
+
               {state.loading ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
                   {['skeleton-1', 'skeleton-2', 'skeleton-3', 'skeleton-4', 'skeleton-5', 'skeleton-6'].map((key) => (
                     <div key={key} className="h-64 animate-pulse rounded-xl bg-slate-200" />
                   ))}
+                </div>
+              ) : hasUnavailableState && state.items.length === 0 ? (
+                <div className="rounded-2xl border border-amber-200 bg-white p-10 text-center">
+                  <h2 className="text-xl font-semibold text-slate-900">Directory data is temporarily unavailable</h2>
+                  <p className="mt-2 text-slate-600">
+                    {state.errorMessage ?? 'The directory request failed before any results could load.'}
+                  </p>
+                  <div className="mt-6 flex flex-wrap justify-center gap-3">
+                    <Button
+                      onClick={() => setFilterVersion((v) => v + 1)}
+                      variant="clay"
+                    >
+                      Retry
+                    </Button>
+                    <Link href={`/directory/${mode}` as Route}>
+                      <Button variant="outline">Back to {getDirectoryTypeLabel(mode)}</Button>
+                    </Link>
+                  </div>
                 </div>
               ) : state.items.length > 0 ? (
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

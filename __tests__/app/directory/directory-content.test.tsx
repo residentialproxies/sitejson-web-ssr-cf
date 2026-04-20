@@ -12,27 +12,34 @@ vi.mock('@/services/api', () => ({
 describe('DirectoryContent', () => {
   it('updates sidebar summaries and related links after filtering', async () => {
     vi.mocked(fetchDirectoryListing).mockResolvedValue({
-      items: [
-        { domain: 'gamma.com', title: 'Gamma', rank: 800, monthlyVisits: 500000, legitimacyScore: 82, techStack: ['Next.js'], tags: ['payments'] },
-        { domain: 'delta.com', title: 'Delta', rank: 1200, monthlyVisits: 320000, legitimacyScore: 76, techStack: ['React'], tags: ['fintech'] },
-      ],
-      page: 1,
-      pageSize: 24,
-      total: 2,
-      totalPages: 1,
+      status: 'success',
+      data: {
+        items: [
+          { domain: 'gamma.com', title: 'Gamma', rank: 800, monthlyVisits: 500000, legitimacyScore: 82, techStack: ['Next.js'], tags: ['payments'] },
+          { domain: 'delta.com', title: 'Delta', rank: 1200, monthlyVisits: 320000, legitimacyScore: 76, techStack: ['React'], tags: ['fintech'] },
+        ],
+        page: 1,
+        pageSize: 24,
+        total: 2,
+        totalPages: 1,
+      },
     });
 
     render(
       <DirectoryContent
         mode="category"
         value="finance"
-        initialItems={[
-          { domain: 'alpha.com', title: 'Alpha', rank: 100, monthlyVisits: 900000, legitimacyScore: 91, techStack: ['Vue'], tags: ['banking'] },
-          { domain: 'beta.com', title: 'Beta', rank: 220, monthlyVisits: 700000, legitimacyScore: 88, techStack: ['Nuxt'], tags: ['lending'] },
-        ]}
-        initialTotal={2}
-        initialTotalPages={1}
-        pageSize={24}
+        initialListing={{
+          items: [
+            { domain: 'alpha.com', title: 'Alpha', rank: 100, monthlyVisits: 900000, legitimacyScore: 91, techStack: ['Vue'], tags: ['banking'] },
+            { domain: 'beta.com', title: 'Beta', rank: 220, monthlyVisits: 700000, legitimacyScore: 88, techStack: ['Nuxt'], tags: ['lending'] },
+          ],
+          page: 1,
+          pageSize: 24,
+          total: 2,
+          totalPages: 1,
+        }}
+        initialStatus="success"
         initialStats={{
           type: 'category',
           slug: 'finance',
@@ -64,5 +71,39 @@ describe('DirectoryContent', () => {
     });
 
     expect(screen.getByText(/Start with gamma.com/i)).toBeDefined();
+  });
+
+  it('keeps prior results visible when a filtered fetch fails', async () => {
+    vi.mocked(fetchDirectoryListing).mockResolvedValue({
+      status: 'unavailable',
+      data: null,
+      message: 'Directory data is temporarily unavailable.',
+    });
+
+    render(
+      <DirectoryContent
+        mode="category"
+        value="finance"
+        initialListing={{
+          items: [
+            { domain: 'alpha.com', title: 'Alpha', rank: 100, monthlyVisits: 900000, legitimacyScore: 91, techStack: ['Vue'], tags: ['banking'] },
+          ],
+          page: 1,
+          pageSize: 24,
+          total: 1,
+          totalPages: 1,
+        }}
+        initialStatus="success"
+      />,
+    );
+
+    await userEvent.click(screen.getByRole('button', { name: 'By traffic' }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Directory data is temporarily unavailable/i)).toBeInTheDocument();
+    });
+
+    expect(screen.getAllByText('alpha.com')).toHaveLength(2);
+    expect(screen.queryByText(/No indexed sites yet/i)).not.toBeInTheDocument();
   });
 });

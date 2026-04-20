@@ -11,9 +11,10 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
-import { getSiteReport } from '@/lib/api-client/client';
+import { getSiteReportResult } from '@/lib/api-client/client';
 import { formatNumber, formatDuration } from '@/lib/utils';
 import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
+import { SectionGuide } from '@/components/domain/SectionGuide';
 import { ReportEmptyState } from './report-empty-state';
 
 export const runtime = 'edge';
@@ -26,10 +27,12 @@ type OverviewPageProps = {
 
 export default async function OverviewPage({ params }: OverviewPageProps) {
   const { domain } = await params;
-  const result = await getSiteReport(domain);
-  if (!result) return <ReportEmptyState domain={domain} section="overview" />;
+  const result = await getSiteReportResult(domain);
+  if (result.status !== 'success') {
+    return <ReportEmptyState domain={domain} section="overview" />;
+  }
 
-  const { report } = result;
+  const { report } = result.data;
   const seo = report.seo;
   const dns = report.dns;
   const traffic = normalizeTrafficDataForDisplay(report.trafficData);
@@ -42,7 +45,9 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
   const taxonomy = report.taxonomy;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-6">
+      <SectionGuide section="overview" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       {/* SEO Card */}
       {seo && (
         <DataCard title="SEO Overview" icon={<Search className="w-4 h-4 text-gray-500" />}>
@@ -302,6 +307,7 @@ export default async function OverviewPage({ params }: OverviewPageProps) {
           )}
         </DataCard>
       )}
+      </div>
     </div>
   );
 }

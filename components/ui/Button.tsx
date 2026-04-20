@@ -57,8 +57,8 @@ export const Button: React.FC<ButtonProps> = ({
       'active:scale-[0.98]'
     ),
     clay: cn(
-      'bg-clay-500 text-white',
-      'hover:bg-clay-600 hover:shadow-lg',
+      'bg-clay-600 text-white',
+      'hover:bg-clay-700 hover:shadow-lg',
       'hover:-translate-y-px',
       'active:scale-[0.98]',
       'shadow-md shadow-clay-200'

@@ -19,9 +19,10 @@ import { AiInsightsCard } from '../components/site/AiInsightsCard';
 
 interface SiteReportProps {
   domain: string;
+  showFullReportButton?: boolean;
 }
 
-const SiteReport: React.FC<SiteReportProps> = ({ domain }) => {
+const SiteReport: React.FC<SiteReportProps> = ({ domain, showFullReportButton = true }) => {
   const { data, isStale, isLoading, isProcessing, progress, error, refresh, statusMessage } = useSiteData(domain);
   const [alternatives, setAlternatives] = useState<AlternativeSite[]>([]);
 
@@ -122,11 +123,13 @@ const SiteReport: React.FC<SiteReportProps> = ({ domain }) => {
                     <Button variant="outline" size="sm" onClick={refresh} className="text-slate-600 gap-2">
                         <RefreshCw size={14} /> Refresh
                     </Button>
-                    <Link href={`/data/${data.domain}`}>
-                      <Button variant="primary" size="sm" className="gap-2">
-                          <Code2 size={14} /> Full Report
-                      </Button>
-                    </Link>
+                    {showFullReportButton && (
+                      <Link href={`/data/${data.domain}`}>
+                        <Button variant="primary" size="sm" className="gap-2">
+                            <Code2 size={14} /> Full Report
+                        </Button>
+                      </Link>
+                    )}
                     <a href={`https://${data.domain}`} target="_blank" rel="noreferrer">
                          <Button variant="secondary" size="icon" className="w-9 h-9">
                              <ExternalLink size={16} />

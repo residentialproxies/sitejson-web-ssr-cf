@@ -1,11 +1,12 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutGrid, Menu } from 'lucide-react';
-import { SearchBar } from '../site/SearchBar';
-import { Button } from '../ui/Button';
+import useSWR from 'swr';
+import { LayoutGrid, Menu, X } from 'lucide-react';
+import { SearchBar } from '@/components/site/SearchBar';
+import { Button } from '@/components/ui/Button';
 
 type SessionState = {
   authenticated: boolean;
@@ -15,90 +16,127 @@ type SessionState = {
   };
 };
 
+const primaryLinks = [
+  { href: '/directory', label: 'Directory' },
+  { href: '/directory/category', label: 'Categories' },
+  { href: '/directory/technology', label: 'Tech Stacks' },
+  { href: '/directory/topic', label: 'Topics' },
+] as const;
+
+const fetcher = async (url: string): Promise<SessionState> => {
+  const response = await fetch(url, { cache: 'no-store' });
+  if (!response.ok) {
+    return { authenticated: false, plan: 'anonymous' };
+  }
+  return response.json() as Promise<SessionState>;
+};
+
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const isHomePage = pathname === '/';
-  const [session, setSession] = useState<SessionState>({
-    authenticated: false,
-    plan: 'anonymous',
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: session, isLoading } = useSWR('/api/auth/session', fetcher, {
+    revalidateOnFocus: false,
+    shouldRetryOnError: false,
   });
-  const [loading, setLoading] = useState(true);
+  const mobileMenuId = 'primary-mobile-menu';
 
-  useEffect(() => {
-    let active = true;
-
-    const loadSession = async () => {
-      try {
-        const response = await fetch('/api/auth/session', { cache: 'no-store' });
-        if (!response.ok) return;
-        const payload = (await response.json()) as SessionState;
-        if (active) {
-          setSession(payload);
-        }
-      } catch {
-        // Intentionally ignore auth fetch failures to keep navigation resilient.
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-    };
-
-    void loadSession();
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const showAuthedNav = !loading && session.authenticated;
+  const showAuthedNav = !isLoading && Boolean(session?.authenticated);
+  const closeMobileMenu = () => setMobileOpen(false);
+  const navigateTo = (href: string) => {
+    window.location.assign(href);
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-ink-200 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
-      <div className="container mx-auto px-4 md:px-6 h-16 flex items-center justify-between max-w-7xl gap-4">
-        <Link href="/" className="flex items-center gap-2 font-bold text-lg shrink-0">
-          <div className="bg-clay-500 text-white p-1.5 rounded-md">
+    <header className="sticky top-0 z-50 w-full border-b border-ink-200 bg-white/90 backdrop-blur supports-[backdrop-filter]:bg-white/70">
+      <div className="container mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 md:px-6">
+        <Link href="/" className="flex shrink-0 items-center gap-2 text-lg font-bold">
+          <div className="rounded-md bg-clay-500 p-1.5 text-white">
             <LayoutGrid size={18} />
           </div>
-          <span className="hidden sm:inline-block font-serif">SiteJson</span>
+          <span className="hidden font-serif sm:inline-block">SiteJson</span>
         </Link>
 
         {!isHomePage && (
-          <div className="flex-1 max-w-md hidden md:block animate-in fade-in slide-in-from-top-2 duration-300">
-            <SearchBar variant="compact" placeholder="Search any domain..." />
+          <div className="hidden max-w-md flex-1 md:block">
+            <SearchBar
+              variant="compact"
+              placeholder="Search any domain..."
+              ariaLabel="Search for a domain report"
+            />
           </div>
         )}
 
-        <nav className="flex items-center gap-4 text-sm font-medium text-ink-600">
-          <Link href="/directory/category/technology" className="hidden md:block hover:text-ink-900 transition-colors">Directory</Link>
-          <Link href="/#pricing" className="hidden md:block hover:text-ink-900 transition-colors">API Pricing</Link>
-          <div className="h-4 w-px bg-ink-200 hidden md:block" />
+        <nav className="hidden items-center gap-4 text-sm font-medium text-ink-600 lg:flex">
+          {primaryLinks.map((link) => (
+            <Link key={link.href} href={link.href} className="transition-colors hover:text-ink-900">
+              {link.label}
+            </Link>
+          ))}
+          <a href="https://api.sitejson.com/api/docs" target="_blank" rel="noreferrer" className="transition-colors hover:text-ink-900">
+            API Docs
+          </a>
+        </nav>
 
+        <div className="hidden items-center gap-4 text-sm font-medium text-ink-600 md:flex">
           {showAuthedNav ? (
             <>
-              <Link href="/dashboard" className="hover:text-ink-900 transition-colors">
-                Dashboard
-              </Link>
-              <a href="/api/auth/logout" className="hover:text-ink-900 transition-colors">
-                Logout
-              </a>
+              <Link href="/dashboard" className="transition-colors hover:text-ink-900">Dashboard</Link>
+              <button type="button" className="transition-colors hover:text-ink-900" onClick={() => navigateTo('/api/auth/logout')}>Logout</button>
             </>
           ) : (
-            <a href="/api/auth/github/start" className="hover:text-ink-900 transition-colors">
-              GitHub Login
-            </a>
+            <button type="button" className="transition-colors hover:text-ink-900" onClick={() => navigateTo('/api/auth/github/start')}>GitHub Login</button>
           )}
+          {showAuthedNav ? (
+            <Link href="/dashboard">
+              <Button variant="clay" size="sm">Manage API Key</Button>
+            </Link>
+          ) : (
+            <Button variant="clay" size="sm" onClick={() => navigateTo('/api/auth/github/start')}>Get API Key</Button>
+          )}
+        </div>
 
-          <a href={showAuthedNav ? "/dashboard" : "/api/auth/github/start"} className="hidden sm:flex">
-            <Button variant="clay" size="sm">
-              {showAuthedNav ? 'Manage API Key' : 'Get API Key'}
-            </Button>
-          </a>
-
-          <button className="md:hidden text-ink-500" aria-label="Open menu">
-            <Menu size={24} />
-          </button>
-        </nav>
+        <button
+          type="button"
+          className="text-ink-500 md:hidden"
+          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+          aria-controls={mobileMenuId}
+          aria-expanded={mobileOpen}
+          onClick={() => setMobileOpen((current) => !current)}
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
       </div>
+
+      {mobileOpen && (
+        <div id={mobileMenuId} className="border-t border-ink-200 bg-white px-4 py-4 md:hidden">
+          {!isHomePage && (
+            <SearchBar
+              variant="compact"
+              placeholder="Search any domain..."
+              ariaLabel="Search for a domain report"
+            />
+          )}
+          <div className="mt-4 grid gap-3 text-sm font-medium text-ink-700">
+            {primaryLinks.map((link) => (
+              <Link key={link.href} href={link.href} className="rounded-xl border border-ink-200 px-4 py-3 hover:bg-ink-50" onClick={closeMobileMenu}>
+                {link.label}
+              </Link>
+            ))}
+            <a href="https://api.sitejson.com/api/docs" target="_blank" rel="noreferrer" className="rounded-xl border border-ink-200 px-4 py-3 hover:bg-ink-50" onClick={closeMobileMenu}>
+              API Docs
+            </a>
+            {showAuthedNav ? (
+              <>
+                <Link href="/dashboard" className="rounded-xl border border-ink-200 px-4 py-3 hover:bg-ink-50" onClick={closeMobileMenu}>Dashboard</Link>
+                <button type="button" className="rounded-xl border border-ink-200 px-4 py-3 text-left hover:bg-ink-50" onClick={() => { closeMobileMenu(); navigateTo('/api/auth/logout'); }}>Logout</button>
+              </>
+            ) : (
+              <button type="button" className="rounded-xl border border-ink-200 px-4 py-3 text-left hover:bg-ink-50" onClick={() => { closeMobileMenu(); navigateTo('/api/auth/github/start'); }}>GitHub Login</button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

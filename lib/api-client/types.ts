@@ -224,7 +224,49 @@ export interface DirectoryItem {
   domain: string;
   title: string;
   rank?: number;
+  description?: string;
+  screenshotUrl?: string;
+  tags?: string[];
+  techStack?: string[];
+  monthlyVisits?: number;
+  legitimacyScore?: number;
 }
+
+export type DirectoryDataStatus = 'success' | 'empty' | 'unavailable' | 'timeout';
+
+export interface DirectoryListingData {
+  items: DirectoryItem[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+export type DirectoryListingResult =
+  | {
+      status: 'success' | 'empty';
+      data: DirectoryListingData;
+    }
+  | {
+      status: 'unavailable' | 'timeout';
+      data: DirectoryListingData | null;
+      message: string;
+    };
+
+export type PublicDataResult<T> =
+  | {
+      status: 'success';
+      data: T;
+    }
+  | {
+      status: 'empty';
+      data: null;
+    }
+  | {
+      status: 'unavailable' | 'timeout';
+      data: null;
+      message: string;
+    };
 
 export interface DirectoryResponse {
   ok: boolean;
@@ -236,5 +278,69 @@ export interface DirectoryResponse {
       total: number;
     };
   };
+  error?: BackendErrorPayload;
+}
+
+export interface DirectoryStats {
+  type: string;
+  slug: string;
+  total: number;
+  avgLegitimacyScore: number | null;
+  trafficDistribution: {
+    top10k: number;
+    top100k: number;
+    top1m: number;
+    unranked: number;
+  };
+  topTechnologies: Array<{ name: string; count: number }>;
+  topTags: Array<{ name: string; count: number }>;
+  topCountries: Array<{ country: string; count: number }>;
+  hasTrafficData: number;
+}
+
+export interface DirectoryStatsResponse {
+  ok: boolean;
+  data?: DirectoryStats;
+  error?: BackendErrorPayload;
+}
+
+export interface DirectorySlugSummary {
+  slug: string;
+  count: number;
+  topDomain?: string;
+  topTitle?: string;
+}
+
+export interface DirectoryTypeSummary {
+  type: string;
+  totalSlugs: number;
+  totalSites: number;
+  slugs: DirectorySlugSummary[];
+}
+
+export interface DirectoryTypeSummaryResponse {
+  ok: boolean;
+  data?: DirectoryTypeSummary;
+  error?: BackendErrorPayload;
+}
+
+export interface GlobalInsights {
+  totalSites: number;
+  withTraffic: number;
+  withScore: number;
+  scoreDistribution: {
+    high: number;
+    medium: number;
+    low: number;
+    unscored: number;
+  };
+  topCategories: Array<{ slug: string; count: number }>;
+  topTechnologies: Array<{ name: string; count: number }>;
+  topTopics: Array<{ name: string; count: number }>;
+}
+
+export interface GlobalInsightsResponse {
+  ok: boolean;
+  data?: GlobalInsights;
   error?: BackendErrorPayload;
 }

@@ -162,6 +162,16 @@ describe('normalizeDirectorySlug', () => {
     expect(normalizeDirectorySlug('  SEO Tools  ')).toBe('seo-tools');
   });
 
+  it('matches the shared P0 slug examples', () => {
+    expect(normalizeDirectorySlug('Technology & Computing')).toBe('technology-and-computing');
+    expect(normalizeDirectorySlug('AI/ML')).toBe('ai-ml');
+    expect(normalizeDirectorySlug('Café SaaS')).toBe('cafe-saas');
+    expect(normalizeDirectorySlug('React.js')).toBe('reactjs');
+    expect(normalizeDirectorySlug('Sales & CRM')).toBe('sales-and-crm');
+    expect(normalizeDirectorySlug('Children’s Media')).toBe('childrens-media');
+    expect(normalizeDirectorySlug('News/Politics')).toBe('news-politics');
+  });
+
   it('returns empty string when input has no slug-safe characters', () => {
     expect(normalizeDirectorySlug('...')).toBe('');
     expect(normalizeDirectorySlug('   ')).toBe('');

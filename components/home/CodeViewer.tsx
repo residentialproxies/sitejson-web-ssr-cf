@@ -93,10 +93,13 @@ console.log(data.radar.global_rank);`;
             Node
           </button>
         </div>
-        <button 
+        <button
           onClick={handleCopy}
+          aria-label={copied ? 'Copied' : 'Copy code'}
+          title={copied ? 'Copied' : 'Copy code'}
           className="text-slate-500 hover:text-white transition-colors"
         >
+          <span className="sr-only">{copied ? 'Copied' : 'Copy code'}</span>
           {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
         </button>
       </div>

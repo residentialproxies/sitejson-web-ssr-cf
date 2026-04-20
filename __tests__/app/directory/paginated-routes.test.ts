@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
 import PaginatedDirectoryPage, { generateMetadata } from '@/app/directory/[type]/[slug]/page/[pageNum]/page';
-import { getDirectory } from '@/lib/api-client/client';
+import { getDirectoryListingResult, getDirectoryStatsResult } from '@/lib/api-client/client';
 import { redirect, notFound } from 'next/navigation';
 
 vi.mock('next/navigation', () => ({
@@ -10,7 +10,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/api-client/client', () => ({
-  getDirectory: vi.fn(),
+  getDirectoryListingResult: vi.fn(),
+  getDirectoryStatsResult: vi.fn(),
 }));
 
 const mockParams = (type: string, slug: string, pageNum: string) =>
@@ -19,15 +20,32 @@ const mockParams = (type: string, slug: string, pageNum: string) =>
 describe('paginated directory routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getDirectory).mockResolvedValue({
-      items: [
-        { domain: 'example.com', title: 'Example', rank: 123 },
-        { domain: 'test.com', title: 'Test', rank: 456 },
-      ],
-      pagination: {
+    vi.mocked(getDirectoryListingResult).mockResolvedValue({
+      status: 'success',
+      data: {
+        items: new Array(6).fill(null).map((_, index) => ({
+          domain: `example-${index}.com`,
+          title: `Example ${index}`,
+          rank: 100 + index,
+        })),
         page: 2,
         total: 50,
-        page_size: 24,
+        pageSize: 24,
+        totalPages: 3,
+      },
+    });
+    vi.mocked(getDirectoryStatsResult).mockResolvedValue({
+      status: 'success',
+      data: {
+        type: 'category',
+        slug: 'marketing',
+        total: 50,
+        avgLegitimacyScore: 81,
+        trafficDistribution: { top10k: 1, top100k: 4, top1m: 40, unranked: 5 },
+        topTechnologies: [{ name: 'react', count: 10 }],
+        topTags: [{ name: 'marketing', count: 50 }],
+        topCountries: [{ country: 'US', count: 20 }],
+        hasTrafficData: 10,
       },
     });
   });
@@ -54,9 +72,9 @@ describe('paginated directory routes', () => {
   });
 
   it('returns notFound when page exceeds totalPages', async () => {
-    vi.mocked(getDirectory).mockResolvedValueOnce({
-      items: [],
-      pagination: { page: 99, total: 50, page_size: 24 },
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'empty',
+      data: { items: [], page: 99, total: 50, pageSize: 24, totalPages: 3 },
     });
     await PaginatedDirectoryPage({ params: mockParams('category', 'marketing', '99') });
     expect(notFound).toHaveBeenCalled();
@@ -69,7 +87,7 @@ describe('paginated directory routes', () => {
 
   it('fetches the correct page from the API', async () => {
     await PaginatedDirectoryPage({ params: mockParams('category', 'marketing', '3') });
-    expect(getDirectory).toHaveBeenCalledWith('category', 'marketing', 3, 24);
+    expect(getDirectoryListingResult).toHaveBeenCalledWith('category', 'marketing', 3, 24);
   });
 
   it('renders DirectoryContent with SSR page data', async () => {
@@ -108,13 +126,82 @@ describe('paginated directory routes', () => {
   });
 
   it('omits next alternate on last page', async () => {
-    vi.mocked(getDirectory).mockResolvedValueOnce({
-      items: [],
-      pagination: { page: 1, total: 48, page_size: 24 },
-    });
+    vi.mocked(getDirectoryListingResult)
+      .mockResolvedValueOnce({
+        status: 'success',
+        data: {
+          items: new Array(6).fill(null).map((_, index) => ({
+            domain: `base-${index}.com`,
+            title: `Base ${index}`,
+          })),
+          page: 1,
+          total: 48,
+          pageSize: 24,
+          totalPages: 2,
+        },
+      })
+      .mockResolvedValueOnce({
+        status: 'success',
+        data: {
+          items: new Array(6).fill(null).map((_, index) => ({
+            domain: `last-${index}.com`,
+            title: `Last ${index}`,
+          })),
+          page: 2,
+          total: 48,
+          pageSize: 24,
+          totalPages: 2,
+        },
+      });
     const metadata = await generateMetadata({ params: mockParams('category', 'marketing', '2') });
     const alternates = metadata.alternates as Record<string, string>;
     expect(alternates.next).toBeUndefined();
+  });
+
+  it('marks unavailable paginated metadata as noindex', async () => {
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'timeout',
+      data: { items: [], page: 2, total: 0, pageSize: 24, totalPages: 0 },
+      message: 'Directory request timed out',
+    });
+
+    const metadata = await generateMetadata({ params: mockParams('category', 'marketing', '2') });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it('marks thin paginated metadata as noindex', async () => {
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'success',
+      data: {
+        items: [{ domain: 'one.com', title: 'One' }],
+        page: 2,
+        total: 30,
+        pageSize: 24,
+        totalPages: 2,
+      },
+    });
+
+    const metadata = await generateMetadata({ params: mockParams('category', 'marketing', '2') });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it('marks paginated metadata above the cap as noindex', async () => {
+    vi.mocked(getDirectoryListingResult).mockResolvedValue({
+      status: 'success',
+      data: {
+        items: new Array(24).fill(null).map((_, index) => ({
+          domain: `page-${index}.com`,
+          title: `Page ${index}`,
+        })),
+        page: 7,
+        total: 240,
+        pageSize: 24,
+        totalPages: 10,
+      },
+    });
+
+    const metadata = await generateMetadata({ params: mockParams('category', 'marketing', '7') });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
   });
 
   it('returns empty metadata for invalid page number', async () => {

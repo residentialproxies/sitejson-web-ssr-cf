@@ -3,6 +3,7 @@ import { checkRateLimit } from './_rate-limit';
 import { requireApiAccess } from './_auth';
 import { readRuntimeEnv } from '@/lib/runtime-env';
 import { resolveSessionFromRequest } from '@/lib/auth/session';
+import { resolveStoredScreenshotUrl } from '@/lib/screenshot-url';
 import {
   createMonthlyQuotaHeaders,
   getUserEntitlements,
@@ -18,7 +19,7 @@ import {
 } from '@/lib/starter-credits';
 
 const defaultTimeoutMs = 15000;
-const PUBLIC_PROXY_PATHS = new Set(['/api/v1/healthz', '/api/v1/readyz']);
+const PUBLIC_PROXY_PATHS = new Set(['/api/v1/healthz', '/api/v1/readyz', '/api/v1/insights']);
 const PUBLIC_READ_PREFIXES = ['/api/v1/directory/', '/api/v1/sites/'];
 
 const CACHE_CONFIG: Record<string, { sMaxAge: number; staleWhileRevalidate: number }> = {
@@ -56,6 +57,76 @@ const parseJson = (text: string): unknown => {
       raw: text,
     };
   }
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const normalizeScreenshotUrls = (payload: unknown): unknown => {
+  if (!isPlainObject(payload) || payload.ok !== true) {
+    return payload;
+  }
+
+  const data = payload.data;
+  if (!isPlainObject(data)) {
+    return payload;
+  }
+
+  const reportPayload = data.report;
+  if (isPlainObject(reportPayload)) {
+    const reportDomain =
+      (typeof data.domain === 'string' && data.domain.trim().length > 0 ? data.domain : undefined)
+      ?? (typeof reportPayload.domain === 'string' && reportPayload.domain.trim().length > 0 ? reportPayload.domain : undefined);
+
+    const visualPayload = reportDomain && isPlainObject(reportPayload.visual) ? reportPayload.visual : undefined;
+    if (reportDomain && visualPayload) {
+      const upstreamUrl = typeof visualPayload.screenshotUrl === 'string' ? visualPayload.screenshotUrl : undefined;
+      const resolvedUrl = resolveStoredScreenshotUrl(reportDomain, upstreamUrl);
+      if (resolvedUrl !== upstreamUrl) {
+        const nextVisual: Record<string, unknown> = { ...visualPayload };
+        if (resolvedUrl) nextVisual.screenshotUrl = resolvedUrl;
+        else delete nextVisual.screenshotUrl;
+
+        return {
+          ...payload,
+          data: {
+            ...data,
+            report: {
+              ...reportPayload,
+              visual: nextVisual,
+            },
+          },
+        };
+      }
+    }
+  }
+
+  if (Array.isArray(data.items)) {
+    const nextItems = data.items.map((item) => {
+      if (!isPlainObject(item)) return item;
+      const domain = typeof item.domain === 'string' ? item.domain : '';
+      if (!domain) return item;
+
+      const upstreamUrl = typeof item.screenshotUrl === 'string' ? item.screenshotUrl : undefined;
+      const resolvedUrl = resolveStoredScreenshotUrl(domain, upstreamUrl);
+      if (resolvedUrl === upstreamUrl) return item;
+
+      const nextItem: Record<string, unknown> = { ...item };
+      if (resolvedUrl) nextItem.screenshotUrl = resolvedUrl;
+      else delete nextItem.screenshotUrl;
+      return nextItem;
+    });
+
+    return {
+      ...payload,
+      data: {
+        ...data,
+        items: nextItems,
+      },
+    };
+  }
+
+  return payload;
 };
 
 const getBackendBaseUrl = (): string => {
@@ -357,7 +428,7 @@ export const proxyToSitejson = async (
     });
 
     const payloadText = await upstream.text();
-    const payload = parseJson(payloadText);
+    const payload = normalizeScreenshotUrls(parseJson(payloadText));
     const plan = rateLimitHeaders?.['x-sitejson-plan'] ?? auth?.plan ?? 'anonymous';
 
     const responseHeaders: Record<string, string> = {

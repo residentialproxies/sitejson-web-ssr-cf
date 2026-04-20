@@ -12,11 +12,13 @@ import {
   MapPin,
   ArrowUpDown,
 } from 'lucide-react';
-import { getSiteReport } from '@/lib/api-client/client';
+import { getSiteReport, getSiteReportResult } from '@/lib/api-client/client';
 import { formatBigNumber, formatDurationHMS, formatNumber } from '@/lib/utils';
 import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
+import { evaluateTrafficSubPageIndexability } from '@/lib/seo/indexability';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
 import { ReportEmptyState } from '../report-empty-state';
+import { SectionGuide } from '@/components/domain/SectionGuide';
 
 export const runtime = 'edge';
 
@@ -28,7 +30,20 @@ type TrafficPageProps = {
 
 export async function generateMetadata({ params }: TrafficPageProps): Promise<Metadata> {
   const { domain } = await params;
-  return buildDataSubPageMetadata(domain, 'traffic');
+  const result = await getSiteReportResult(domain);
+
+  if (result.status === 'success') {
+    const decision = evaluateTrafficSubPageIndexability(result.data.report);
+    return buildDataSubPageMetadata(domain, 'traffic', {
+      index: decision.index,
+      follow: decision.follow,
+    });
+  }
+
+  return buildDataSubPageMetadata(domain, 'traffic', {
+    index: false,
+    follow: result.status !== 'empty',
+  });
 }
 
 const SOURCE_COLORS: Record<string, string> = {
@@ -72,6 +87,7 @@ export default async function TrafficPage({ params }: TrafficPageProps) {
 
   return (
     <div className="space-y-6">
+      <SectionGuide section="traffic" />
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <MetricCard

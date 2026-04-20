@@ -5,10 +5,12 @@ node_modules
 .vercel
 .deploy
 dist
+.site-patrol
 .env*
 !.env.example
 .dev.vars
 next-env.d.ts
 tsconfig.tsbuildinfo
+tsconfig.typecheck.tsbuildinfo
 CLAUDE.md
 .claude/

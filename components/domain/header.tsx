@@ -54,7 +54,13 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
               </div>
               <div className="mt-3 flex items-center gap-2">
                 <h1 className="truncate text-2xl font-semibold text-slate-950 md:text-3xl">{domain}</h1>
-                <a href={`https://${domain}`} target="_blank" rel="noopener noreferrer" className="text-slate-400 transition-colors hover:text-slate-700">
+                <a
+                  href={`https://${domain}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open ${domain} in a new tab`}
+                  className="text-slate-400 transition-colors hover:text-slate-700"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>

@@ -12,6 +12,7 @@ interface DirectoryTypeHubProps {
   type: DirectoryType;
   items: DirectoryItem[];
   summary?: DirectoryTypeSummary | null;
+  notice?: string | null;
 }
 
 const formatNumber = (n: number): string => {
@@ -20,7 +21,7 @@ const formatNumber = (n: number): string => {
   return String(n);
 };
 
-export function DirectoryTypeHub({ type, items, summary }: DirectoryTypeHubProps) {
+export function DirectoryTypeHub({ type, items, summary, notice }: DirectoryTypeHubProps) {
   const seed = getDirectorySeed(type);
 
   return (
@@ -33,6 +34,11 @@ export function DirectoryTypeHub({ type, items, summary }: DirectoryTypeHubProps
               <h1 className="mt-3 text-4xl font-semibold text-slate-900 md:text-5xl">{seed.title}</h1>
               <p className="mt-4 text-lg leading-relaxed text-slate-600">{seed.description}</p>
               <p className="mt-4 text-sm font-medium text-slate-700">{seed.intent}</p>
+              {notice && (
+                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                  {notice}
+                </div>
+              )}
               {summary && (
                 <p className="mt-3 text-sm text-slate-400">
                   {formatNumber(summary.totalSlugs)} {type === 'category' ? 'categories' : type === 'technology' ? 'technologies' : 'topics'} · {formatNumber(summary.totalSites)} total sites indexed

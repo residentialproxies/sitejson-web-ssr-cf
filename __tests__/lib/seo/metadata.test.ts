@@ -5,6 +5,7 @@ import {
   buildSitePageMetadata,
   buildDataSubPageMetadata,
   buildDirectoryMetadata,
+  buildPaginatedDirectoryMetadata,
 } from '@/lib/seo/metadata';
 
 describe('buildBaseMetadata', () => {
@@ -17,7 +18,6 @@ describe('buildBaseMetadata', () => {
     expect(metadata).toHaveProperty('icons');
     expect(metadata).toHaveProperty('openGraph');
     expect(metadata).toHaveProperty('twitter');
-    expect(metadata).toHaveProperty('robots');
     expect(metadata).toHaveProperty('keywords');
   });
 
@@ -74,13 +74,15 @@ describe('buildBaseMetadata', () => {
     expect(metadata.twitter).toHaveProperty('images');
   });
 
-  it('should have correct robots configuration', () => {
+  it('should not force a site-wide canonical or robots policy from the root layout', () => {
     const metadata = buildBaseMetadata();
-    expect(metadata.robots).toMatchObject({
-      index: true,
-      follow: true,
+
+    expect(metadata.robots).toBeUndefined();
+    expect(metadata.alternates).toEqual({
+      types: {
+        'application/rss+xml': 'https://sitejson.com/rss.xml',
+      },
     });
-    expect(metadata.robots).toHaveProperty('googleBot');
   });
 
   it('should have keywords', () => {
@@ -277,6 +279,15 @@ describe('buildDataSubPageMetadata', () => {
       title: 'example.com Alternatives & Similar Sites | SiteJSON',
     });
   });
+
+  it('allows callers to noindex a data subpage while preserving follow', () => {
+    const metadata = buildDataSubPageMetadata('example.com', 'alternatives', { index: false, follow: true });
+
+    expect(metadata.robots).toEqual({
+      index: false,
+      follow: true,
+    });
+  });
 });
 
 describe('buildDirectoryMetadata', () => {
@@ -335,5 +346,17 @@ describe('buildDirectoryMetadata', () => {
       title: 'Top News Websites | SiteJSON',
     });
     expect(metadata.twitter).toHaveProperty('images');
+  });
+
+  it('allows paginated directory metadata to noindex while preserving follow', () => {
+    const metadata = buildPaginatedDirectoryMetadata('category', 'marketing', 4, 8, {
+      index: false,
+      follow: true,
+    });
+
+    expect(metadata.robots).toEqual({
+      index: false,
+      follow: true,
+    });
   });
 });

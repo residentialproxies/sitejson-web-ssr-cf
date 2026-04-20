@@ -112,7 +112,7 @@ export const PricingSection: React.FC = () => {
                 ].join(' ')}
               >
                 {plan.badge && (
-                  <div className="absolute -top-3 left-6 rounded-full bg-clay-500 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
+                  <div className="absolute -top-3 left-6 rounded-full bg-clay-600 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
                     {plan.badge}
                   </div>
                 )}

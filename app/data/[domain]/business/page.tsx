@@ -11,9 +11,11 @@ import {
   Palette,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
-import { getSiteReport } from '@/lib/api-client/client';
+import { getSiteReport, getSiteReportResult } from '@/lib/api-client/client';
+import { evaluateBusinessSubPageIndexability } from '@/lib/seo/indexability';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
 import { ReportEmptyState } from '../report-empty-state';
+import { SectionGuide } from '@/components/domain/SectionGuide';
 
 export const runtime = 'edge';
 
@@ -25,7 +27,20 @@ type BusinessPageProps = {
 
 export async function generateMetadata({ params }: BusinessPageProps): Promise<Metadata> {
   const { domain } = await params;
-  return buildDataSubPageMetadata(domain, 'business');
+  const result = await getSiteReportResult(domain);
+
+  if (result.status === 'success') {
+    const decision = evaluateBusinessSubPageIndexability(result.data.report);
+    return buildDataSubPageMetadata(domain, 'business', {
+      index: decision.index,
+      follow: decision.follow,
+    });
+  }
+
+  return buildDataSubPageMetadata(domain, 'business', {
+    index: false,
+    follow: result.status !== 'empty',
+  });
 }
 
 export default async function BusinessPage({ params }: BusinessPageProps) {
@@ -55,6 +70,7 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
 
   return (
     <div className="space-y-6">
+      <SectionGuide section="business" />
       {/* Row 1: Business Profile + Trust & Risk */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: Business Summary */}

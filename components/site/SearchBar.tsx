@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ArrowRight } from 'lucide-react';
 import { Button } from '../ui/Button';
@@ -11,15 +11,18 @@ interface SearchBarProps {
   placeholder?: string;
   initialValue?: string;
   variant?: 'hero' | 'compact';
+  ariaLabel?: string;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   className,
   placeholder = "google.com",
   initialValue = "",
-  variant = 'hero'
+  variant = 'hero',
+  ariaLabel = 'Search for a domain'
 }) => {
   const [input, setInput] = useState(initialValue);
+  const inputId = useId();
   const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -47,10 +50,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           <Search size={variant === 'hero' ? 20 : 16} />
         </div>
         <input
+          id={inputId}
+          name="domain"
+          autoComplete="url"
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder={placeholder}
+          aria-label={ariaLabel}
           className={cn(
             "w-full rounded-full border border-ink-200 bg-white px-4 py-2 outline-none transition-all placeholder:text-ink-400 focus:border-clay-400 focus:ring-4 focus:ring-clay-100",
             variant === 'hero' ? "h-14 pl-12 pr-32 text-lg shadow-lg" : "h-10 pl-10 pr-12 text-sm"
@@ -61,6 +68,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             type="submit"
             variant="clay"
             size={variant === 'hero' ? 'md' : 'sm'}
+            aria-label={variant === 'hero' ? undefined : 'Analyze domain'}
             className={cn("rounded-full", variant === 'hero' ? "px-6" : "px-3")}
           >
             {variant === 'hero' ? (

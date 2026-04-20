@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getDirectory, getDirectoryTypeSummary } from '@/lib/api-client/client';
+import {
+  getDirectoryListingResult,
+  getDirectoryTypeSummaryResult,
+} from '@/lib/api-client/client';
 import { buildDirectoryTypeHubMetadata } from '@/lib/seo/metadata';
 import { generateDirectoryTypeHubJsonLd } from '@/lib/seo/json-ld';
 import type { DirectoryType } from '@/lib/pseo';
@@ -30,16 +33,24 @@ export default async function DirectoryTypePage({ params }: DirectoryTypePagePro
 
   const normalizedType: DirectoryType = type;
   const seed = getDirectorySeed(normalizedType);
-  const [data, summary] = await Promise.all([
-    getDirectory(normalizedType, seed.slug, 1, 6),
-    getDirectoryTypeSummary(normalizedType, 50),
+  const [listing, summary] = await Promise.all([
+    getDirectoryListingResult(normalizedType, seed.slug, 1, 6),
+    getDirectoryTypeSummaryResult(normalizedType, 50),
   ]);
   const jsonLd = generateDirectoryTypeHubJsonLd(normalizedType, seed.slug);
+  const notice = listing.status === 'unavailable' || listing.status === 'timeout' || summary.status === 'unavailable' || summary.status === 'timeout'
+    ? 'Some directory data is temporarily unavailable. Try the featured live page or refresh later.'
+    : null;
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd }} />
-      <DirectoryTypeHub type={normalizedType} items={data?.items ?? []} summary={summary} />
+      <DirectoryTypeHub
+        type={normalizedType}
+        items={listing.status === 'success' || listing.status === 'empty' ? listing.data.items : []}
+        summary={summary.status === 'success' ? summary.data : null}
+        notice={notice}
+      />
     </>
   );
 }

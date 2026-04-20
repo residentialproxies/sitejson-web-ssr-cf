@@ -1,13 +1,26 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
-import { getDirectory, getDirectoryStats } from '@/lib/api-client/client';
+import {
+  getDirectoryListingResult,
+  getDirectoryStatsResult,
+} from '@/lib/api-client/client';
 import { getDirectoryDetailFaqs, getDirectorySeed, isDirectoryType } from '@/lib/pseo';
+import { evaluateDirectoryIndexability } from '@/lib/seo/indexability';
 import { buildDirectoryMetadata } from '@/lib/seo/metadata';
 import { generateDirectoryPageJsonLd } from '@/lib/seo/json-ld';
 import { normalizeDirectorySlug } from '@/lib/utils';
 import DirectoryContent from './directory-content';
 
 export const runtime = 'edge';
+
+const loadDirectoryListing = cache(
+  async (type: string, slug: string) => getDirectoryListingResult(type, slug, 1, 24),
+);
+
+const loadDirectoryStats = cache(
+  async (type: string, slug: string) => getDirectoryStatsResult(type, slug),
+);
 
 type DirectoryPageProps = {
   params: Promise<{
@@ -24,10 +37,18 @@ export async function generateMetadata({ params }: DirectoryPageProps): Promise<
 
   const seed = getDirectorySeed(type);
   const normalizedSlug = normalizeDirectorySlug(slug) || seed.slug;
-  const data = await getDirectory(type, normalizedSlug, 1, 1);
-  const hasResults = (data?.pagination?.total ?? 0) > 0;
+  const [listing, statsResult] = await Promise.all([
+    loadDirectoryListing(type, normalizedSlug),
+    loadDirectoryStats(type, normalizedSlug),
+  ]);
+  const decision = evaluateDirectoryIndexability(
+    listing.data,
+    statsResult.status === 'success' ? statsResult.data : null,
+  );
 
-  return buildDirectoryMetadata(type, normalizedSlug, { index: hasResults });
+  return buildDirectoryMetadata(type, normalizedSlug, {
+    index: decision.index,
+  });
 }
 
 export default async function DirectoryPage({ params }: DirectoryPageProps) {
@@ -47,14 +68,10 @@ export default async function DirectoryPage({ params }: DirectoryPageProps) {
     return null;
   }
 
-  const [data, stats] = await Promise.all([
-    getDirectory(normalizedType, safeSlug, 1, 24),
-    getDirectoryStats(normalizedType, safeSlug),
+  const [listing, statsResult] = await Promise.all([
+    loadDirectoryListing(normalizedType, safeSlug),
+    loadDirectoryStats(normalizedType, safeSlug),
   ]);
-  const items = data?.items ?? [];
-  const total = data?.pagination?.total ?? 0;
-  const pageSize = data?.pagination?.page_size ?? 24;
-  const totalPages = total > 0 ? Math.ceil(total / pageSize) : 0;
   const faqs = getDirectoryDetailFaqs(normalizedType, safeSlug);
   const jsonLd = generateDirectoryPageJsonLd({ type: normalizedType, slug: safeSlug, faqs });
 
@@ -64,11 +81,11 @@ export default async function DirectoryPage({ params }: DirectoryPageProps) {
       <DirectoryContent
         mode={normalizedType}
         value={safeSlug}
-        initialItems={items}
-        initialTotal={total}
-        initialTotalPages={totalPages}
-        pageSize={pageSize}
-        initialStats={stats}
+        initialListing={listing.data ?? { items: [], page: 1, pageSize: 24, total: 0, totalPages: 0 }}
+        initialStatus={listing.status}
+        initialMessage={listing.status === 'unavailable' || listing.status === 'timeout' ? listing.message : null}
+        pageSize={listing.data?.pageSize ?? 24}
+        initialStats={statsResult.status === 'success' ? statsResult.data : null}
       />
     </>
   );

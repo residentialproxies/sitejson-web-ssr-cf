@@ -11,10 +11,12 @@ import {
   Layers,
 } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
-import { getSiteReport } from '@/lib/api-client/client';
+import { getSiteReport, getSiteReportResult } from '@/lib/api-client/client';
 import { cn } from '@/lib/utils';
+import { evaluateSeoSubPageIndexability } from '@/lib/seo/indexability';
 import { buildDataSubPageMetadata } from '@/lib/seo/metadata';
 import { ReportEmptyState } from '../report-empty-state';
+import { SectionGuide } from '@/components/domain/SectionGuide';
 
 export const runtime = 'edge';
 
@@ -26,7 +28,20 @@ type SeoPageProps = {
 
 export async function generateMetadata({ params }: SeoPageProps): Promise<Metadata> {
   const { domain } = await params;
-  return buildDataSubPageMetadata(domain, 'seo');
+  const result = await getSiteReportResult(domain);
+
+  if (result.status === 'success') {
+    const decision = evaluateSeoSubPageIndexability(result.data.report);
+    return buildDataSubPageMetadata(domain, 'seo', {
+      index: decision.index,
+      follow: decision.follow,
+    });
+  }
+
+  return buildDataSubPageMetadata(domain, 'seo', {
+    index: false,
+    follow: result.status !== 'empty',
+  });
 }
 
 interface ChecklistItemProps {
@@ -73,6 +88,7 @@ export default async function SeoPage({ params }: SeoPageProps) {
 
   return (
     <div className="space-y-6">
+      <SectionGuide section="seo" />
       {/* Heading & Links */}
       {seo && (
         <section className="grid grid-cols-1 md:grid-cols-2 gap-4">

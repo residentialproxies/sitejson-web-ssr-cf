@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getGlobalInsights } from '@/lib/api-client/client';
+import { getGlobalInsightsResult } from '@/lib/api-client/client';
 import { buildInsightsMetadata } from '@/lib/seo/metadata';
 
 export const runtime = 'edge';
@@ -14,9 +14,27 @@ const formatNumber = (n: number): string => {
 };
 
 export default async function InsightsPage() {
-  const insights = await getGlobalInsights();
+  const insightsResult = await getGlobalInsightsResult();
 
-  if (!insights) {
+  if (insightsResult.status === 'unavailable' || insightsResult.status === 'timeout') {
+    return (
+      <div className="min-h-screen bg-slate-50 py-20">
+        <div className="container mx-auto max-w-4xl px-4 text-center">
+          <h1 className="text-3xl font-semibold text-slate-900">Global Insights</h1>
+          <p className="mt-4 text-slate-600">
+            {insightsResult.message}
+          </p>
+          <div className="mt-8">
+            <Link href="/directory" className="rounded-full bg-clay-600 px-6 py-3 text-sm font-semibold text-white hover:bg-clay-700">
+              Browse Directory
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (insightsResult.status !== 'success') {
     return (
       <div className="min-h-screen bg-slate-50 py-20">
         <div className="container mx-auto max-w-4xl px-4 text-center">
@@ -32,6 +50,7 @@ export default async function InsightsPage() {
     );
   }
 
+  const insights = insightsResult.data;
   const { totalSites, withTraffic, withScore, scoreDistribution, topCategories, topTechnologies, topTopics } = insights;
 
   return (
@@ -103,10 +122,10 @@ export default async function InsightsPage() {
                   <Link
                     key={c.slug}
                     href={`/directory/category/${c.slug}`}
-                    className="flex items-center justify-between rounded-lg p-2 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-slate-50"
                   >
-                    <span className="text-sm text-slate-700 capitalize">{i + 1}. {c.slug.replace(/-/g, ' ')}</span>
-                    <span className="text-xs text-slate-400">{formatNumber(c.count)}</span>
+                    <span className="min-w-0 truncate text-sm text-slate-700 capitalize">{i + 1}. {c.slug.replace(/-/g, ' ')}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{formatNumber(c.count)}</span>
                   </Link>
                 ))}
               </div>
@@ -121,10 +140,10 @@ export default async function InsightsPage() {
                   <Link
                     key={t.name}
                     href={`/directory/technology/${t.name}`}
-                    className="flex items-center justify-between rounded-lg p-2 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-slate-50"
                   >
-                    <span className="text-sm text-slate-700">{i + 1}. {t.name}</span>
-                    <span className="text-xs text-slate-400">{formatNumber(t.count)}</span>
+                    <span className="min-w-0 truncate text-sm text-slate-700">{i + 1}. {t.name}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{formatNumber(t.count)}</span>
                   </Link>
                 ))}
               </div>
@@ -139,10 +158,10 @@ export default async function InsightsPage() {
                   <Link
                     key={t.name}
                     href={`/directory/topic/${t.name}`}
-                    className="flex items-center justify-between rounded-lg p-2 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between gap-3 rounded-lg p-2 transition-colors hover:bg-slate-50"
                   >
-                    <span className="text-sm text-slate-700">{i + 1}. {t.name}</span>
-                    <span className="text-xs text-slate-400">{formatNumber(t.count)}</span>
+                    <span className="min-w-0 truncate text-sm text-slate-700">{i + 1}. {t.name}</span>
+                    <span className="shrink-0 text-xs text-slate-400">{formatNumber(t.count)}</span>
                   </Link>
                 ))}
               </div>

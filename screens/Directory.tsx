@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { fetchDirectoryListing } from '../services/api';
-import type { DirectoryItem } from '../lib/api-client/types';
+import type { DirectoryDataStatus, DirectoryItem } from '../lib/api-client/types';
 import { SiteCard } from '../components/shared/SiteCard';
 import { Button } from '../components/ui/Button';
 import { ChevronRight, Hash, Layers, Tag } from 'lucide-react';
@@ -22,6 +22,8 @@ const Directory: React.FC<DirectoryProps> = ({ mode, value }) => {
   const [pageSize] = useState(24);
   const [totalPages, setTotalPages] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState<DirectoryDataStatus>('empty');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const type: PageType = mode;
   let icon = <Layers className="w-6 h-6 text-blue-500" />;
@@ -40,10 +42,24 @@ const Directory: React.FC<DirectoryProps> = ({ mode, value }) => {
     setLoading(true);
     fetchDirectoryListing(type, value, page, pageSize)
       .then((data) => {
-        setSites(data.items);
-        setTotal(data.total);
-        setPage(data.page);
-        setTotalPages(data.totalPages);
+        setStatus(data.status);
+        if (data.status === 'unavailable' || data.status === 'timeout') {
+          setErrorMessage(data.message);
+          return;
+        }
+
+        const listing = data.data ?? {
+          items: [],
+          page,
+          pageSize,
+          total: 0,
+          totalPages: 0,
+        };
+        setSites(listing.items);
+        setTotal(listing.total);
+        setPage(listing.page);
+        setTotalPages(listing.totalPages);
+        setErrorMessage(null);
       })
       .finally(() => {
         setLoading(false);
@@ -112,6 +128,13 @@ const Directory: React.FC<DirectoryProps> = ({ mode, value }) => {
             {sites.map((site) => (
               <SiteCard key={site.domain} site={site} />
             ))}
+          </div>
+        ) : status === 'unavailable' || status === 'timeout' ? (
+          <div className="rounded-2xl border border-amber-200 bg-white p-10 text-center">
+            <h2 className="text-xl font-semibold text-slate-900">Directory data is temporarily unavailable</h2>
+            <p className="mt-2 text-slate-600">
+              {errorMessage ?? 'The directory request failed before any results could load.'}
+            </p>
           </div>
         ) : (
           <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center">

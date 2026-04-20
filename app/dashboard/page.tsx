@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -16,6 +17,14 @@ import {
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description: 'Manage your SiteJSON API access and account entitlements.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 const formatDateTime = (value: string | null): string => {
   if (!value) return 'No active Pro billing cycle';

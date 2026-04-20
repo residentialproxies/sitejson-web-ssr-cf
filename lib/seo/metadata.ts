@@ -30,17 +30,6 @@ export const buildBaseMetadata = (): Metadata => ({
   authors: [{ name: 'SiteJSON' }],
   creator: 'SiteJSON',
   publisher: 'SiteJSON',
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
-    },
-  },
   icons: {
     icon: [
       { url: '/icons/icon-192x192.png', type: 'image/png', sizes: '192x192' },
@@ -71,7 +60,6 @@ export const buildBaseMetadata = (): Metadata => ({
     google: process.env.GOOGLE_SITE_VERIFICATION,
   },
   alternates: {
-    canonical: '/',
     types: {
       'application/rss+xml': `${BASE_URL}/rss.xml`,
     },
@@ -152,8 +140,11 @@ export const buildSitePageMetadata = (domain: string): Metadata => {
 export const buildDataSubPageMetadata = (
   domain: string,
   subPage: 'traffic' | 'seo' | 'tech' | 'business' | 'alternatives',
+  options?: { index?: boolean; follow?: boolean },
 ): Metadata => {
   const normalizedDomain = normalizeDomainInput(domain);
+  const index = options?.index ?? true;
+  const follow = options?.follow ?? true;
   const titles: Record<string, string> = {
     traffic: `${normalizedDomain} Traffic Statistics & Analytics`,
     seo: `${normalizedDomain} SEO Analysis & Structure`,
@@ -179,6 +170,7 @@ export const buildDataSubPageMetadata = (
   return {
     title: titles[subPage],
     description: descriptions[subPage],
+    robots: { index, follow },
     alternates: {
       canonical: `/data/${normalizedDomain}/${subPage}`,
     },
@@ -325,6 +317,7 @@ export const buildPaginatedDirectoryMetadata = (
   slug: string,
   pageNum: number,
   totalPages: number,
+  options?: { index?: boolean; follow?: boolean },
 ): Metadata => {
   const normalizedType = type.trim().toLowerCase();
   const normalizedSlug = normalizeDirectorySlug(slug) || slug.trim().toLowerCase();
@@ -332,6 +325,8 @@ export const buildPaginatedDirectoryMetadata = (
   const label = normalizedType === 'technology' ? 'built with' : 'in';
   const basePath = `/directory/${normalizedType}/${normalizedSlug}`;
   const path = `${basePath}/page/${pageNum}`;
+  const index = options?.index ?? true;
+  const follow = options?.follow ?? true;
 
   const alternates: Record<string, string> = { canonical: path };
   if (pageNum === 2) {
@@ -346,7 +341,7 @@ export const buildPaginatedDirectoryMetadata = (
   return {
     title: `Top ${display} Websites — Page ${pageNum}`,
     description: `Page ${pageNum} of the most popular websites ${label} ${display}. Ranked by traffic, authority, and AI analysis.`,
-    robots: { index: true, follow: true },
+    robots: { index, follow },
     alternates,
     openGraph: {
       title: `Top ${display} Websites — Page ${pageNum} | ${siteName}`,

@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { createElement, type ReactNode } from 'react';
 import { renderHook } from '@testing-library/react';
 import { SWRConfig } from 'swr';
+
+const mockHeaders = vi.hoisted(() => vi.fn());
+
+vi.mock('next/headers', () => ({
+  headers: mockHeaders,
+}));
+
 import {
   getSiteReport,
   getDirectory,
@@ -43,13 +50,19 @@ const createSWRWrapper = () => {
 describe('API Client', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHeaders.mockRejectedValue(new Error('No request context'));
     process.env.SITEJSON_API_KEY = 'test-api-key';
+    process.env.SITEJSON_API_BASE_URL = 'http://localhost:8787';
     process.env.NEXT_PUBLIC_SITEJSON_API_BASE_URL = 'http://localhost:8787';
   });
 
   afterEach(() => {
     delete process.env.SITEJSON_API_KEY;
+    delete process.env.SITEJSON_API_BASE_URL;
     delete process.env.NEXT_PUBLIC_SITEJSON_API_BASE_URL;
+    delete process.env.PUBLIC_SITE_BASE_URL;
+    delete process.env.SITEJSON_SCREENSHOT_BASE_URL;
+    delete process.env.NEXT_PUBLIC_SITEJSON_SCREENSHOT_BASE_URL;
   });
 
   describe('getSiteReport', () => {
@@ -85,7 +98,7 @@ describe('API Client', () => {
             accept: 'application/json',
             'x-api-key': 'test-api-key',
           }),
-          cache: 'no-store',
+          next: { revalidate: 300 },
         })
       );
 
@@ -126,6 +139,134 @@ describe('API Client', () => {
         expect.stringContaining('example.com%2Fpath%3Fquery%3D1'),
         expect.any(Object)
       );
+    });
+
+    it('should drop legacy screenshot host URLs', async () => {
+      const mockReport: SiteReport = {
+        domain: 'example.com',
+        updatedAt: '2024-01-01T00:00:00Z',
+        visual: {
+          screenshotUrl: 'https://cdn.sitejson.com/snapshots/example_com.webp',
+          storage: 'r2',
+        },
+      };
+
+      const mockResponse: SiteReportResponse = {
+        ok: true,
+        data: {
+          domain: 'example.com',
+          freshness: {
+            is_stale: false,
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+          report: mockReport,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await getSiteReport('example.com');
+
+      expect(result?.report.visual?.screenshotUrl).toBeUndefined();
+    });
+
+    it('should prefer configured screenshot base URL when set', async () => {
+      process.env.SITEJSON_SCREENSHOT_BASE_URL = 'https://server.sitejson.com';
+
+      const mockReport: SiteReport = {
+        domain: 'example.com',
+        updatedAt: '2024-01-01T00:00:00Z',
+        visual: {
+          screenshotUrl: 'https://cdn.sitejson.com/snapshots/example_com.webp',
+          storage: 'r2',
+        },
+      };
+
+      const mockResponse: SiteReportResponse = {
+        ok: true,
+        data: {
+          domain: 'example.com',
+          freshness: {
+            is_stale: false,
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+          report: mockReport,
+        },
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () => Promise.resolve(mockResponse),
+      });
+
+      const result = await getSiteReport('example.com');
+
+      expect(result?.report.visual?.screenshotUrl).toBe('https://server.sitejson.com/snapshots/example_com.webp');
+    });
+
+    it('should fall back to the public site proxy when direct backend auth fails', async () => {
+      process.env.SITEJSON_API_KEY = 'bad-key';
+      process.env.PUBLIC_SITE_BASE_URL = 'https://sitejson.com';
+
+      const mockReport: SiteReport = {
+        domain: 'example.com',
+        updatedAt: '2024-01-01T00:00:00Z',
+      };
+
+      const mockResponse: SiteReportResponse = {
+        ok: true,
+        data: {
+          domain: 'example.com',
+          freshness: {
+            is_stale: false,
+            updated_at: '2024-01-01T00:00:00Z',
+          },
+          report: mockReport,
+        },
+      };
+
+      mockFetch
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 401,
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () => Promise.resolve(mockResponse),
+        });
+
+      const result = await getSiteReport('example.com');
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        'http://localhost:8787/api/v1/sites/example.com',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            accept: 'application/json',
+            'x-api-key': 'bad-key',
+          }),
+        }),
+      );
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        2,
+        'https://sitejson.com/api/sitejson/sites/example.com',
+        expect.objectContaining({
+          next: { revalidate: 300 },
+        }),
+      );
+      const fallbackHeaders = mockFetch.mock.calls[1]?.[1]?.headers as Headers;
+      expect(fallbackHeaders.get('accept')).toBe('application/json');
+      expect(fallbackHeaders.has('x-api-key')).toBe(false);
+
+      expect(result).toEqual({
+        report: mockReport,
+        isStale: false,
+        updatedAt: '2024-01-01T00:00:00Z',
+      });
     });
   });
 
@@ -256,6 +397,7 @@ describe('API Client', () => {
   describe('API key handling', () => {
     it('should not include API key header when not set', async () => {
       delete process.env.SITEJSON_API_KEY;
+      process.env.PUBLIC_SITE_BASE_URL = 'https://sitejson.com';
 
       mockFetch.mockResolvedValueOnce({
         ok: false,
@@ -265,7 +407,7 @@ describe('API Client', () => {
       await getSiteReport('example.com');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.any(String),
+        'https://sitejson.com/api/sitejson/sites/example.com',
         expect.objectContaining({
           headers: expect.not.objectContaining({
             'x-api-key': expect.any(String),
@@ -273,10 +415,38 @@ describe('API Client', () => {
         })
       );
     });
+
+    it('should derive the public origin from request headers when runtime env is unavailable', async () => {
+      delete process.env.SITEJSON_API_KEY;
+      delete process.env.PUBLIC_SITE_BASE_URL;
+      mockHeaders.mockResolvedValueOnce(
+        new Headers({
+          host: 'preview.sitejson-web-ssr.pages.dev',
+          'x-forwarded-proto': 'https',
+        }),
+      );
+
+      mockFetch.mockResolvedValueOnce({
+        ok: false,
+        status: 404,
+      });
+
+      await getSiteReport('example.com');
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        'https://preview.sitejson-web-ssr.pages.dev/api/sitejson/sites/example.com',
+        expect.objectContaining({
+          headers: expect.not.objectContaining({
+            'x-api-key': expect.any(String),
+          }),
+        }),
+      );
+    });
   });
 
   describe('Base URL fallback', () => {
     it('should use fallback URL when env vars not set', async () => {
+      delete process.env.SITEJSON_API_BASE_URL;
       delete process.env.NEXT_PUBLIC_SITEJSON_API_BASE_URL;
 
       mockFetch.mockResolvedValueOnce({

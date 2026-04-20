@@ -1,5 +1,16 @@
 import type { ApiResponse } from '../lib/types';
-import type { SiteReport, SiteReportResponse, DirectoryItem, AlternativeSite } from '../lib/api-client/types';
+import type {
+  AlternativeSite,
+  DirectoryItem,
+  DirectoryListingResult,
+  SiteReport,
+  SiteReportResponse,
+} from '../lib/api-client/types';
+import {
+  DEFAULT_DIRECTORY_PAGE_SIZE,
+  createDirectoryListingErrorResult,
+  createDirectoryListingResult,
+} from '../lib/api-client/directory-results';
 
 type BackendAnalyzeResponse = {
   ok?: boolean;
@@ -33,6 +44,7 @@ type BackendDirectoryResponse = {
       total?: number;
     };
   };
+  error?: { code?: string; message?: string };
 };
 
 type BackendAlternativesResponse = {
@@ -42,14 +54,6 @@ type BackendAlternativesResponse = {
     items?: AlternativeSite[];
   };
   error?: { code?: string; message?: string };
-};
-
-export type DirectoryListingResult = {
-  items: DirectoryItem[];
-  page: number;
-  pageSize: number;
-  total: number;
-  totalPages: number;
 };
 
 const pendingJobs = new Map<string, string>();
@@ -64,7 +68,10 @@ const parseJson = <T>(text: string): T | null => {
   }
 };
 
-const requestJson = async <T>(path: string, init?: RequestInit): Promise<{ status: number; body: T | null }> => {
+const requestJson = async <T>(
+  path: string,
+  init?: RequestInit,
+): Promise<{ status: number; body: T | null; text: string }> => {
   try {
     const response = await fetch(path, {
       ...init,
@@ -75,10 +82,45 @@ const requestJson = async <T>(path: string, init?: RequestInit): Promise<{ statu
       },
     });
     const text = await response.text();
-    return { status: response.status, body: parseJson<T>(text) };
+    return { status: response.status, body: parseJson<T>(text), text };
   } catch {
-    return { status: 0, body: null };
+    return { status: 0, body: null, text: '' };
   }
+};
+
+const shouldRetryStatus = (status: number) => status === 502 || status === 503 || status === 504;
+
+const deriveErrorMessage = <T extends { error?: { message?: string } }>(
+  response: { status: number; body: T | null; text: string },
+  fallback: string,
+) => {
+  const bodyMessage = response.body?.error?.message?.trim();
+  if (bodyMessage) return bodyMessage;
+
+  const plainText = response.text.trim().replace(/\s+/g, ' ');
+  if (plainText && !plainText.startsWith('<')) {
+    if (/^error code:\s*\d{3}$/i.test(plainText) && response.status >= 500) {
+      return `SiteJSON is temporarily unavailable (HTTP ${response.status}). Please try again in a moment.`;
+    }
+
+    if (plainText.length <= 160) {
+      return plainText;
+    }
+  }
+
+  if (response.status === 0) {
+    return 'Unable to reach SiteJSON right now. Please try again in a moment.';
+  }
+
+  if (response.status === 429) {
+    return 'Too many requests. Please wait a moment and try again.';
+  }
+
+  if (response.status >= 500) {
+    return `SiteJSON is temporarily unavailable (HTTP ${response.status}). Please try again in a moment.`;
+  }
+
+  return fallback;
 };
 
 const normalizeDomain = (input: string): string => {
@@ -143,7 +185,12 @@ const readJobStatus = async (
 };
 
 const readSiteReport = async (domain: string) => {
-  return requestJson<SiteReportResponse>(`/api/sitejson/sites/${encodeURIComponent(domain)}`);
+  const path = `/api/sitejson/sites/${encodeURIComponent(domain)}`;
+  const initial = await requestJson<SiteReportResponse>(path);
+  if (shouldRetryStatus(initial.status)) {
+    return requestJson<SiteReportResponse>(path);
+  }
+  return initial;
 };
 
 const extractReport = (body: SiteReportResponse): { report: SiteReport; isStale: boolean } => {
@@ -220,14 +267,17 @@ export const fetchSiteData = async (domainInput: string, refresh = false): Promi
     }
   }
 
-  return { status: 'error', message: reportResponse.body?.error?.message ?? 'Failed to load site report' };
+  return {
+    status: 'error',
+    message: deriveErrorMessage(reportResponse, 'Failed to load site report'),
+  };
 };
 
 export const fetchDirectoryListing = async (
   type: string,
   value: string,
   page = 1,
-  pageSize = 24,
+  pageSize = DEFAULT_DIRECTORY_PAGE_SIZE,
   options?: { sort?: string; minScore?: number; hasTraffic?: boolean },
 ): Promise<DirectoryListingResult> => {
   let qs = `page=${encodeURIComponent(String(page))}&page_size=${encodeURIComponent(String(pageSize))}`;
@@ -240,23 +290,15 @@ export const fetchDirectoryListing = async (
   );
 
   if (response.status !== 200 || !response.body?.ok) {
-    return { items: [], page, pageSize, total: 0, totalPages: 0 };
+    return createDirectoryListingErrorResult(
+      response.status === 0 ? 'timeout' : 'unavailable',
+      response.body?.error?.message ?? 'Directory data is temporarily unavailable.',
+      page,
+      pageSize,
+    );
   }
 
-  const items = (response.body.data?.items ?? []).filter(
-    (item): item is DirectoryItem => Boolean(item?.domain),
-  );
-  const normalizedPage = response.body.data?.pagination?.page ?? page;
-  const normalizedPageSize = response.body.data?.pagination?.page_size ?? pageSize;
-  const total = response.body.data?.pagination?.total ?? items.length;
-
-  return {
-    items,
-    page: normalizedPage,
-    pageSize: normalizedPageSize,
-    total,
-    totalPages: total > 0 ? Math.ceil(total / normalizedPageSize) : 0,
-  };
+  return createDirectoryListingResult(response.body.data, page, pageSize);
 };
 
 export const fetchAlternatives = async (domain: string): Promise<AlternativeSite[]> => {

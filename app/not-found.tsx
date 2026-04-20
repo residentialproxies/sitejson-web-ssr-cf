@@ -1,11 +1,14 @@
 import React from 'react';
+import type { Metadata } from 'next';
 import { Search, Home } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { GoBackButton } from '@/components/error/GoBackButton';
 import Link from 'next/link';
 
-export const metadata = {
-  title: 'Page Not Found | SiteJSON',
+export const metadata: Metadata = {
+  title: {
+    absolute: 'Page Not Found | SiteJSON',
+  },
   description: 'The page you are looking for could not be found.',
 };
 

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import type { Route } from 'next';
 import type { DirectoryItem, GlobalInsights } from '@/lib/api-client/types';
 import { ArrowRight } from 'lucide-react';
-import { DIRECTORY_TYPE_ORDER, DIRECTORY_SEEDS, getDirectoryHubFaqs } from '@/lib/pseo';
+import { DIRECTORY_TYPE_ORDER, DIRECTORY_SEEDS, FEATURED_REPORTS, getDirectoryHubFaqs, type DirectoryType } from '@/lib/pseo';
 import { FaqSection } from '@/components/shared/FaqSection';
 import { DirectoryPreviewList } from './DirectoryPreviewList';
 
@@ -11,6 +11,7 @@ interface DirectoryHubOverviewProps {
   previews: Record<string, DirectoryItem[]>;
   totals?: Record<string, number>;
   insights?: GlobalInsights | null;
+  notice?: string | null;
 }
 
 const formatNumber = (n: number): string => {
@@ -19,7 +20,22 @@ const formatNumber = (n: number): string => {
   return String(n);
 };
 
-export function DirectoryHubOverview({ previews, totals, insights }: DirectoryHubOverviewProps) {
+const createPreviewItem = (reportIndex: number): DirectoryItem => {
+  const report = FEATURED_REPORTS[reportIndex];
+
+  return {
+    domain: report.domain,
+    title: report.description,
+  };
+};
+
+const FALLBACK_PREVIEWS: Record<DirectoryType, DirectoryItem[]> = {
+  category: [createPreviewItem(0), createPreviewItem(1), createPreviewItem(2)],
+  technology: [createPreviewItem(3), createPreviewItem(0), createPreviewItem(2)],
+  topic: [createPreviewItem(1), createPreviewItem(0), createPreviewItem(3)],
+};
+
+export function DirectoryHubOverview({ previews, totals, insights, notice }: DirectoryHubOverviewProps) {
   return (
     <div className="min-h-screen bg-slate-50 py-10">
       <div className="container mx-auto max-w-7xl space-y-8 px-4 md:px-6">
@@ -30,6 +46,11 @@ export function DirectoryHubOverview({ previews, totals, insights }: DirectoryHu
             Start from a market, a technology stack, or a topic. Each path leads into live report pages with traffic,
             SEO, business, and trust signals that are easier to act on than a plain lookup table.
           </p>
+          {notice && (
+            <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              {notice}
+            </div>
+          )}
           {insights && insights.totalSites > 0 && (
             <div className="mt-6 flex flex-wrap gap-4">
               <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-medium text-slate-700">
@@ -53,6 +74,8 @@ export function DirectoryHubOverview({ previews, totals, insights }: DirectoryHu
         <section className="grid gap-6 xl:grid-cols-3">
           {DIRECTORY_TYPE_ORDER.map((type) => {
             const seed = DIRECTORY_SEEDS[type];
+            const previewItems = previews[type]?.length ? previews[type] : FALLBACK_PREVIEWS[type];
+            const usingFallbackPreview = (previews[type]?.length ?? 0) === 0;
             const total = totals?.[type];
             return (
               <article key={type} className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -73,7 +96,12 @@ export function DirectoryHubOverview({ previews, totals, insights }: DirectoryHu
                 <p className="mt-4 text-sm leading-relaxed text-slate-600">{seed.description}</p>
                 <p className="mt-3 text-sm font-medium text-slate-700">{seed.intent}</p>
                 <div className="mt-6">
-                  <DirectoryPreviewList items={previews[type] ?? []} />
+                  {usingFallbackPreview && (
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                      Curated live examples while fresh rollups reload
+                    </p>
+                  )}
+                  <DirectoryPreviewList items={previewItems} />
                 </div>
               </article>
             );

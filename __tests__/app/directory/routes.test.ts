@@ -3,7 +3,12 @@ import React from 'react';
 import DirectoryIndexPage from '@/app/directory/page';
 import DirectoryTypePage, { generateMetadata as generateTypeMetadata } from '@/app/directory/[type]/page';
 import DirectorySlugPage, { generateMetadata as generateSlugMetadata } from '@/app/directory/[type]/[slug]/page';
-import { getDirectory } from '@/lib/api-client/client';
+import {
+  getDirectoryListingResult,
+  getDirectoryStatsResult,
+  getDirectoryTypeSummaryResult,
+  getGlobalInsightsResult,
+} from '@/lib/api-client/client';
 import { notFound, redirect } from 'next/navigation';
 
 vi.mock('next/navigation', () => ({
@@ -12,25 +17,45 @@ vi.mock('next/navigation', () => ({
 }));
 
 vi.mock('@/lib/api-client/client', () => ({
-  getDirectory: vi.fn(),
-  getDirectoryTypeSummary: vi.fn().mockResolvedValue(null),
-  getDirectoryStats: vi.fn().mockResolvedValue(null),
-  getGlobalInsights: vi.fn().mockResolvedValue(null),
+  getDirectoryListingResult: vi.fn(),
+  getDirectoryTypeSummaryResult: vi.fn().mockResolvedValue({ status: 'empty', data: null }),
+  getDirectoryStatsResult: vi.fn().mockResolvedValue({ status: 'empty', data: null }),
+  getGlobalInsightsResult: vi.fn().mockResolvedValue({ status: 'empty', data: null }),
 }));
 
 describe('directory routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(getDirectory).mockResolvedValue({
-      items: [
-        { domain: 'example.com', title: 'Example', rank: 123 },
-      ],
-      pagination: {
+    vi.mocked(getDirectoryListingResult).mockResolvedValue({
+      status: 'success',
+      data: {
+        items: [
+          { domain: 'example.com', title: 'Example', description: 'One', rank: 123 },
+          { domain: 'test.com', title: 'Test', description: 'Two', rank: 456 },
+          { domain: 'demo.com', title: 'Demo', description: 'Three', rank: 789 },
+        ],
         page: 1,
-        total: 1,
-        page_size: 24,
+        total: 12,
+        pageSize: 24,
+        totalPages: 1,
       },
     });
+    vi.mocked(getDirectoryStatsResult).mockResolvedValue({
+      status: 'success',
+      data: {
+        type: 'category',
+        slug: 'marketing',
+        total: 12,
+        avgLegitimacyScore: 81,
+        trafficDistribution: { top10k: 1, top100k: 4, top1m: 6, unranked: 1 },
+        topTechnologies: [{ name: 'react', count: 8 }],
+        topTags: [{ name: 'marketing', count: 12 }],
+        topCountries: [{ country: 'US', count: 7 }],
+        hasTrafficData: 5,
+      },
+    });
+    vi.mocked(getDirectoryTypeSummaryResult).mockResolvedValue({ status: 'empty', data: null });
+    vi.mocked(getGlobalInsightsResult).mockResolvedValue({ status: 'empty', data: null });
   });
 
   it('renders /directory as an indexable hub instead of redirecting', async () => {
@@ -69,7 +94,7 @@ describe('directory routes', () => {
 
   it('uses canonical type and slug for backend fetch when route is canonical', async () => {
     await DirectorySlugPage({ params: Promise.resolve({ type: 'category', slug: 'marketing' }) });
-    expect(getDirectory).toHaveBeenCalledWith('category', 'marketing', 1, 24);
+    expect(getDirectoryListingResult).toHaveBeenCalledWith('category', 'marketing', 1, 24);
   });
 
   it('renders parseable JSON-LD schema for canonical directory routes', async () => {
@@ -97,12 +122,48 @@ describe('directory routes', () => {
   });
 
   it('marks empty detail pages as noindex', async () => {
-    vi.mocked(getDirectory).mockResolvedValueOnce({
-      items: [],
-      pagination: { page: 1, total: 0, page_size: 1 },
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'empty',
+      data: { items: [], page: 1, total: 0, pageSize: 24, totalPages: 0 },
     });
 
     const metadata = await generateSlugMetadata({ params: Promise.resolve({ type: 'topic', slug: 'finance' }) });
     expect(metadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it('marks unavailable detail pages as noindex', async () => {
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'unavailable',
+      data: { items: [], page: 1, total: 0, pageSize: 24, totalPages: 0 },
+      message: 'Directory request failed',
+    });
+
+    const metadata = await generateSlugMetadata({ params: Promise.resolve({ type: 'topic', slug: 'finance' }) });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it('marks low-signal successful detail pages as noindex', async () => {
+    vi.mocked(getDirectoryListingResult).mockResolvedValueOnce({
+      status: 'success',
+      data: {
+        items: [{ domain: 'example.com', title: 'Example' }],
+        page: 1,
+        total: 4,
+        pageSize: 24,
+        totalPages: 1,
+      },
+    });
+    vi.mocked(getDirectoryStatsResult).mockResolvedValueOnce({
+      status: 'empty',
+      data: null,
+    });
+
+    const metadata = await generateSlugMetadata({ params: Promise.resolve({ type: 'topic', slug: 'finance' }) });
+    expect(metadata.robots).toMatchObject({ index: false, follow: true });
+  });
+
+  it('marks rich successful detail pages as indexable', async () => {
+    const metadata = await generateSlugMetadata({ params: Promise.resolve({ type: 'topic', slug: 'finance' }) });
+    expect(metadata.robots).toMatchObject({ index: true, follow: true });
   });
 });

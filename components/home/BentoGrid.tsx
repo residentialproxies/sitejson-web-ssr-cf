@@ -145,7 +145,7 @@ export const BentoGrid: React.FC = () => {
                 <div className="flex -space-x-2">
                   <div className="w-8 h-8 rounded-full bg-clay-600 border-2 border-ink-800 flex items-center justify-center text-xs">A</div>
                   <div className="w-8 h-8 rounded-full bg-sage-600 border-2 border-ink-800 flex items-center justify-center text-xs">B</div>
-                  <div className="w-8 h-8 rounded-full bg-ochre-600 border-2 border-ink-800 flex items-center justify-center text-xs">+5</div>
+                  <div className="w-8 h-8 rounded-full bg-ochre-700 border-2 border-ink-800 flex items-center justify-center text-xs">+5</div>
                 </div>
                 <span className="text-xs font-mono text-clay-300">pub-8192...</span>
               </div>
