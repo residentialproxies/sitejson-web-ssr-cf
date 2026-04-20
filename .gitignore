@@ -14,3 +14,4 @@ tsconfig.tsbuildinfo
 tsconfig.typecheck.tsbuildinfo
 CLAUDE.md
 .claude/
+.env
