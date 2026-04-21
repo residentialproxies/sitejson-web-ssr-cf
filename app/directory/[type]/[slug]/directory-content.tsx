@@ -3,7 +3,7 @@
 import React, { useEffect, useReducer, useState } from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { BarChart3, ChevronRight, Hash, Layers, Tag } from 'lucide-react';
+import { ChartBar as BarChart3, ChevronRight, Hash, Layers, Tag } from 'lucide-react';
 import { fetchDirectoryListing } from '@/services/api';
 import type {
   DirectoryDataStatus,
@@ -74,7 +74,7 @@ const toDisplayLabel = (input: string): string => input
 
 const icons = {
   category: <Layers className="h-6 w-6 text-blue-500" />,
-  technology: <Hash className="h-6 w-6 text-purple-500" />,
+  technology: <Hash className="h-6 w-6 text-teal-500" />,
   topic: <Tag className="h-6 w-6 text-emerald-500" />,
 };
 
@@ -325,14 +325,16 @@ export default function DirectoryContent({
     <div className="min-h-screen bg-slate-50/70">
       <div className="border-b border-slate-200 bg-white">
         <div className="container mx-auto max-w-7xl px-4 py-10">
-          <nav className="mb-6 flex items-center gap-2 text-sm text-slate-500">
-            <Link href="/" className="hover:text-slate-900">Home</Link>
-            <ChevronRight size={14} />
-            <Link href="/directory" className="hover:text-slate-900">Directory</Link>
-            <ChevronRight size={14} />
-            <Link href={`/directory/${mode}` as Route} className="hover:text-slate-900">{getDirectoryTypeLabel(mode)}</Link>
-            <ChevronRight size={14} />
-            <span className="text-slate-900">{displayValue}</span>
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li><Link href="/" className="hover:text-slate-900">Home</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li><Link href="/directory" className="hover:text-slate-900">Directory</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li><Link href={`/directory/${mode}` as Route} className="hover:text-slate-900">{getDirectoryTypeLabel(mode)}</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li aria-current="page"><span className="text-slate-900 font-medium">{displayValue}</span></li>
+            </ol>
           </nav>
 
           <div className="grid gap-10 lg:grid-cols-[1fr_320px]">

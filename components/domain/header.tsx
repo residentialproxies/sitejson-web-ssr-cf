@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Image from 'next/image';
-import { Clock, ExternalLink, RefreshCw, ShieldCheck, BarChart3, Layers3 } from 'lucide-react';
+import Link from 'next/link';
+import { Clock, ExternalLink, RefreshCw, ShieldCheck, ChartBar as BarChart3, Layers as Layers3 } from 'lucide-react';
 import type { SiteReport } from '@/lib/api-client/types';
-import { cn, formatNumber, generateBlurPlaceholder, getFaviconUrl, getRelativeTime, getScreenshotUrl } from '@/lib/utils';
+import { cn, formatNumber, generateBlurPlaceholder, getFaviconUrl, getRelativeTime, getScreenshotUrl, normalizeDirectorySlug } from '@/lib/utils';
 
 interface DomainHeaderProps {
   domain: string;
@@ -49,7 +50,7 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
           <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <Image src={faviconUrl} alt="" width={20} height={20} className="h-5 w-5 rounded-sm" unoptimized />
+                <Image src={faviconUrl} alt={`${domain} logo`} width={20} height={20} className="h-5 w-5 rounded-sm" unoptimized />
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Live website intelligence</p>
               </div>
               <div className="mt-3 flex items-center gap-2">
@@ -112,15 +113,29 @@ export function DomainHeader({ domain, report, updatedAt, isStale, className }: 
                 <Layers3 className="h-4 w-4" />Detected stack
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {techStack.slice(0, 8).map((tech) => (
-                  <span key={tech} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
-                    {tech}
-                  </span>
-                ))}
+                {techStack.slice(0, 8).map((tech) => {
+                  const slug = normalizeDirectorySlug(tech);
+                  return slug ? (
+                    <Link
+                      key={tech}
+                      href={`/directory/technology/${slug}`}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700 transition-colors hover:border-clay-200 hover:text-clay-700"
+                    >
+                      {tech}
+                    </Link>
+                  ) : (
+                    <span key={tech} className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-700">
+                      {tech}
+                    </span>
+                  );
+                })}
                 {techStack.length > 8 && (
-                  <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500">
+                  <Link
+                    href={`/data/${domain}/tech`}
+                    className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-500 transition-colors hover:text-clay-700"
+                  >
                     +{techStack.length - 8} more
-                  </span>
+                  </Link>
                 )}
               </div>
             </div>

@@ -29,7 +29,7 @@ const Directory: React.FC<DirectoryProps> = ({ mode, value }) => {
   let icon = <Layers className="w-6 h-6 text-blue-500" />;
 
   if (type === 'technology') {
-    icon = <Hash className="w-6 h-6 text-purple-500" />;
+    icon = <Hash className="w-6 h-6 text-teal-500" />;
   } else if (type === 'topic') {
     icon = <Tag className="w-6 h-6 text-emerald-500" />;
   }
@@ -84,13 +84,17 @@ const Directory: React.FC<DirectoryProps> = ({ mode, value }) => {
     <div className="min-h-screen bg-slate-50/50">
       <div className="bg-white border-b border-slate-200">
         <div className="container mx-auto px-4 py-12 max-w-7xl">
-          <div className="flex items-center gap-2 text-sm text-slate-500 mb-6">
-            <Link href="/" className="hover:text-slate-900">Home</Link>
-            <ChevronRight size={14} />
-            <span className="capitalize">{type}</span>
-            <ChevronRight size={14} />
-            <span className="text-slate-900 font-medium">{displayValue}</span>
-          </div>
+          <nav aria-label="Breadcrumb" className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-slate-500">
+              <li><Link href="/" className="hover:text-slate-900">Home</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li><Link href="/directory" className="hover:text-slate-900">Directory</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li><Link href={`/directory/${type}`} className="capitalize hover:text-slate-900">{type}</Link></li>
+              <li aria-hidden="true"><ChevronRight size={14} /></li>
+              <li aria-current="page"><span className="text-slate-900 font-medium">{displayValue}</span></li>
+            </ol>
+          </nav>
 
           <div className="flex items-start gap-4">
             <div className="p-3 bg-slate-100 rounded-xl border border-slate-200">{icon}</div>

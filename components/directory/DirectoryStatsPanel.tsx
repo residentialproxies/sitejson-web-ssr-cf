@@ -104,9 +104,9 @@ export function DirectoryStatsPanel({ stats }: DirectoryStatsPanelProps) {
           <p className="mt-2 text-xs text-slate-400">Detected technology signals in this filtered cluster, not universal market share.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             {topTech.map((t) => (
-              <span key={t.name} className="flex items-center gap-1.5 rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-xs font-medium text-purple-700">
+              <span key={t.name} className="flex items-center gap-1.5 rounded-full border border-teal-200 bg-teal-50 px-2.5 py-1 text-xs font-medium text-teal-700">
                 {t.name}
-                <span className="rounded-full bg-purple-200 px-1.5 text-[10px] font-bold">{t.count}</span>
+                <span className="rounded-full bg-teal-200 px-1.5 text-[10px] font-bold">{t.count}</span>
               </span>
             ))}
           </div>

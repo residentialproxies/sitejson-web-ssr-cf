@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { BarChart3, Clock3, Coins, Gauge, KeyRound, ShieldCheck } from 'lucide-react';
+import { ChartBar as BarChart3, Clock3, Coins, Gauge, KeyRound, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { TokenDisplay } from '@/components/dashboard/TokenDisplay';
 import { BILLING_MODE_MANUAL, FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA, SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/auth/session';
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-6">
-            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-violet-50 text-violet-600">
+            <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
               <Gauge size={18} />
             </div>
             <h2 className="text-lg font-semibold text-slate-900">Rate Limit</h2>

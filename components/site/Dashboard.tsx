@@ -54,7 +54,7 @@ export const Dashboard: React.FC<{ data: SiteReport }> = ({ data }) => {
             <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
                     <CardTitle className="flex items-center gap-2">
-                        <Cpu className="w-4 h-4 text-purple-600" /> AI Insight
+                        <Cpu className="w-4 h-4 text-teal-600" /> AI Insight
                     </CardTitle>
                     {data.taxonomy?.iabCategory && (
                       <Badge variant="outline">{data.taxonomy.iabCategory}</Badge>

@@ -23,10 +23,10 @@ export const AiInsightsCard: React.FC<{ data: SiteReport }> = ({ data }) => {
   if (!ai) return null;
 
   return (
-    <Card className="border border-slate-200 shadow-sm bg-gradient-to-br from-white to-violet-50/30">
+    <Card className="border border-slate-200 shadow-sm bg-gradient-to-br from-white to-teal-50/30">
       <CardHeader className="border-b border-slate-100 py-4">
         <CardTitle className="flex items-center gap-2 text-slate-800">
-          <div className="p-1.5 bg-violet-100 rounded-md text-violet-600">
+          <div className="p-1.5 bg-teal-100 rounded-md text-teal-600">
             <Sparkles size={16} />
           </div>
           AI Intelligence

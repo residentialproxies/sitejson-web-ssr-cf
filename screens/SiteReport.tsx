@@ -77,22 +77,27 @@ const SiteReport: React.FC<SiteReportProps> = ({ domain, showFullReportButton = 
       {/* Sticky Header */}
       <div className="sticky top-16 z-40 bg-white/90 backdrop-blur border-b border-slate-200">
         <div className="container mx-auto px-4 py-4 max-w-7xl">
-            <div className="flex items-center gap-2 text-xs text-slate-500 mb-2">
-                <Link href="/" className="hover:text-slate-900">Home</Link>
-                <ChevronRight size={12} />
-                <Link href="/directory/category/technology" className="hover:text-slate-900">Directory</Link>
-                <ChevronRight size={12} />
-                <Link href={`/data/${data.domain}`} className="hover:text-slate-900">Data</Link>
-                <ChevronRight size={12} />
-                <span className="text-slate-900 font-medium">{data.domain}</span>
-            </div>
+            <nav aria-label="Breadcrumb" className="mb-2">
+              <ol className="flex items-center gap-2 text-xs text-slate-500">
+                <li><Link href="/" className="hover:text-slate-900">Home</Link></li>
+                <li aria-hidden="true"><ChevronRight size={12} /></li>
+                <li><Link href="/directory" className="hover:text-slate-900">Directory</Link></li>
+                <li aria-hidden="true"><ChevronRight size={12} /></li>
+                <li><Link href={`/data/${data.domain}`} className="hover:text-slate-900">Data</Link></li>
+                <li aria-hidden="true"><ChevronRight size={12} /></li>
+                <li aria-current="page"><span className="text-slate-900 font-medium">{data.domain}</span></li>
+              </ol>
+            </nav>
 
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                     <img
                         src={`https://www.google.com/s2/favicons?domain=${data.domain}&sz=64`}
-                        alt="favicon"
+                        alt={`${data.domain} favicon`}
+                        width={40}
+                        height={40}
                         className="w-10 h-10 rounded-lg border border-slate-200 shadow-sm"
+                        loading="lazy"
                     />
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900 leading-none">{data.domain}</h1>

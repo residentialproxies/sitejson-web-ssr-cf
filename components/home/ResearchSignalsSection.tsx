@@ -1,5 +1,5 @@
 import React from 'react';
-import { Code2, Database, Cpu, Server, Zap } from 'lucide-react';
+import { Code as Code2, Database, Cpu, Server, Zap } from 'lucide-react';
 import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS, PRO_MONTHLY_QUOTA } from '@/lib/auth/session';
 import { RESEARCH_SIGNAL_CARDS } from '@/lib/pseo';
 
@@ -8,7 +8,7 @@ const stackItems = [
   { label: 'Python', icon: Code2, color: 'text-blue-600' },
   { label: 'Go', icon: Zap, color: 'text-sky-500' },
   { label: 'Rust', icon: Cpu, color: 'text-orange-600' },
-  { label: 'PHP', icon: Database, color: 'text-indigo-500' },
+  { label: 'PHP', icon: Database, color: 'text-blue-600' },
 ] as const;
 
 const proofStats = [

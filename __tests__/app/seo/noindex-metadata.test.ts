@@ -7,7 +7,10 @@ describe('noindex metadata', () => {
     expect(notFoundMetadata.title).toEqual({
       absolute: 'Page Not Found | SiteJSON',
     });
-    expect(notFoundMetadata.robots).toBeUndefined();
+    expect(notFoundMetadata.robots).toMatchObject({
+      index: false,
+      follow: true,
+    });
   });
 
   it('marks the authenticated dashboard page as non-indexable', () => {

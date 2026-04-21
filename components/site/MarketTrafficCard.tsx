@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { BarChart3, Globe, Clock, FileStack } from 'lucide-react';
+import { ChartBar as BarChart3, Globe, Clock, FileStack } from 'lucide-react';
 import { cn, formatNumber, formatDurationHMS, getRankBadgeColor } from '../../lib/utils';
 import { Badge } from '../ui/Badge';
 import { normalizeTrafficDataForDisplay } from '@/lib/traffic-display';
@@ -109,7 +109,7 @@ export const MarketTrafficCard: React.FC<{ data: SiteReport }> = ({ data }) => {
                 <div className="bg-emerald-500 h-full" style={{ width: `${traffic.trafficSources.search}%` }} title={`Search ${traffic.trafficSources.search.toFixed(0)}%`} />
               )}
               {traffic.trafficSources.social > 0 && (
-                <div className="bg-violet-500 h-full" style={{ width: `${traffic.trafficSources.social}%` }} title={`Social ${traffic.trafficSources.social.toFixed(0)}%`} />
+                <div className="bg-rose-500 h-full" style={{ width: `${traffic.trafficSources.social}%` }} title={`Social ${traffic.trafficSources.social.toFixed(0)}%`} />
               )}
               {traffic.trafficSources.referral > 0 && (
                 <div className="bg-amber-500 h-full" style={{ width: `${traffic.trafficSources.referral}%` }} title={`Referral ${traffic.trafficSources.referral.toFixed(0)}%`} />
@@ -118,7 +118,7 @@ export const MarketTrafficCard: React.FC<{ data: SiteReport }> = ({ data }) => {
             <div className="flex flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-slate-500">
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-500" />Direct</span>
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Search</span>
-              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-violet-500" />Social</span>
+              <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-rose-500" />Social</span>
               <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" />Referral</span>
             </div>
           </div>

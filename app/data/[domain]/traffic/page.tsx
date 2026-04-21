@@ -49,7 +49,7 @@ export async function generateMetadata({ params }: TrafficPageProps): Promise<Me
 const SOURCE_COLORS: Record<string, string> = {
   direct: 'bg-blue-500',
   search: 'bg-emerald-500',
-  social: 'bg-purple-500',
+  social: 'bg-rose-500',
   referral: 'bg-amber-500',
   mail: 'bg-rose-500',
   paid: 'bg-cyan-500',

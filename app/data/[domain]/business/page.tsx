@@ -321,9 +321,9 @@ export default async function BusinessPage({ params }: BusinessPageProps) {
               </div>
             )}
             {ai.business?.targetAudience && (
-              <div className="p-3 bg-purple-50 rounded-lg border border-purple-100">
-                <h4 className="text-sm font-medium text-purple-900 mb-1">Audience</h4>
-                <p className="text-xs text-purple-700">{ai.business.targetAudience}</p>
+              <div className="p-3 bg-teal-50 rounded-lg border border-teal-100">
+                <h4 className="text-sm font-medium text-teal-900 mb-1">Audience</h4>
+                <p className="text-xs text-teal-700">{ai.business.targetAudience}</p>
               </div>
             )}
           </div>

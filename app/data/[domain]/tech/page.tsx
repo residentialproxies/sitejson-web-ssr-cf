@@ -173,7 +173,7 @@ export default async function TechPage({ params }: TechPageProps) {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 space-y-3">
             {radar.rankBucket && (
               <div>
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200">
                   Rank: {radar.rankBucket}
                 </span>
               </div>

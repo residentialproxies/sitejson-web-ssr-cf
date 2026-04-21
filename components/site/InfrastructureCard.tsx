@@ -1,7 +1,7 @@
 import React from 'react';
 import type { SiteReport } from '../../lib/api-client/types';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
-import { Server, Mail, Cpu, Zap, CheckCircle2, XCircle } from 'lucide-react';
+import { Server, Mail, Cpu, Zap, CircleCheck as CheckCircle2, Circle as XCircle } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import Link from 'next/link';
 import { normalizeDirectorySlug } from '@/lib/utils';
@@ -17,7 +17,7 @@ export const InfrastructureCard: React.FC<{ data: SiteReport }> = ({ data }) => 
     <Card className="border border-slate-200 shadow-sm h-full flex flex-col">
       <CardHeader className="border-b border-slate-50 py-4 bg-slate-50/30">
         <CardTitle className="text-sm font-medium flex items-center gap-2 text-slate-700">
-          <Server size={16} className="text-indigo-500" />
+          <Server size={16} className="text-blue-500" />
           Infrastructure
         </CardTitle>
       </CardHeader>

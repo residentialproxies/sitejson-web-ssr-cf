@@ -1,15 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import {
-  FileText,
-  Bot,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Link as LinkIcon,
-  Heading1,
-  Layers,
-} from 'lucide-react';
+import { FileText, Bot, CircleCheck as CheckCircle2, Circle as XCircle, CircleAlert as AlertCircle, Link as LinkIcon, Heading1, Layers } from 'lucide-react';
 import { DataCard, DataRow, StatusBadge, ScoreBadge, TagList } from '@/components/domain/data-card';
 import { getSiteReport, getSiteReportResult } from '@/lib/api-client/client';
 import { cn } from '@/lib/utils';
@@ -180,12 +171,12 @@ export default async function SeoPage({ params }: SeoPageProps) {
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-4 space-y-3">
             <div className="flex flex-wrap items-center gap-2">
               {taxonomy.iabCategory && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-purple-50 text-purple-700 border border-purple-200">
+                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
                   {taxonomy.iabCategory}
                 </span>
               )}
               {taxonomy.iabSubCategory && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-purple-50 text-purple-600 border border-purple-200">
+                <span className="inline-flex items-center px-2.5 py-1 rounded text-xs font-medium bg-slate-50 text-slate-600 border border-slate-200">
                   {taxonomy.iabSubCategory}
                 </span>
               )}
