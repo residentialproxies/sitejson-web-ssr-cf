@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { ArrowRight, ChartBar as BarChart2, Search, ShieldCheck, Globe, Layers } from 'lucide-react';
+import { ArrowRight, BarChart3, Layers3, Search, ShieldCheck } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS } from '@/lib/auth/session';
@@ -12,27 +12,16 @@ import { FREE_RATE_LIMIT_RPM, FREE_STARTER_CREDITS } from '@/lib/auth/session';
 type CodeViewerProps = { domain: string };
 
 const demoDomains = ['openai.com', 'stripe.com', 'vercel.com', 'figma.com'] as const;
-
-const dataPoints = [
-  { label: 'Monthly visits', value: '1.2M', sub: 'Estimated traffic' },
-  { label: 'Tech stack', value: '14', sub: 'Detected signals' },
-  { label: 'Trust score', value: '97', sub: 'AI legitimacy' },
-  { label: 'Global rank', value: '#312', sub: 'Semrush / Radar' },
-] as const;
-
-const signalPills = [
-  { label: 'Traffic estimates', icon: BarChart2 },
-  { label: 'SEO structure', icon: Search },
-  { label: 'Tech detection', icon: Layers },
-  { label: 'Trust scoring', icon: ShieldCheck },
-  { label: 'DNS & infra', icon: Globe },
-] as const;
-
 const quickLinks = [
   { href: '/directory', label: 'Browse directory' },
   { href: '/directory/technology', label: 'Tech stacks' },
   { href: '/directory/topic', label: 'Topics' },
   { href: '/data/openai.com', label: 'Sample report' },
+] as const;
+const heroSignals = [
+  { label: 'Traffic context', value: 'Estimated visits, rank, audience', icon: BarChart3 },
+  { label: 'SEO structure', value: 'Detected indexability and links', icon: Search },
+  { label: 'Trust posture', value: 'Measured and detected risk signals', icon: ShieldCheck },
 ] as const;
 
 const CodeViewerFallback = () => (
@@ -95,44 +84,22 @@ export const HeroSection: React.FC = () => {
       <div className="absolute inset-0 gradient-mesh" />
       <div className="absolute inset-0 noise-overlay pointer-events-none" />
       <div className="container relative z-10 mx-auto max-w-7xl px-4 md:px-6">
-        <div className="grid gap-12 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-
-          {/* Left column */}
-          <div className="flex flex-col gap-7">
+        <div className="grid gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+          <div className="flex flex-col gap-6">
             <Badge variant="clay" dot pulse className="w-fit">
-              50+ data points per domain — traffic, tech, trust &amp; more
+              Website intelligence for analysts, buyers, and growth teams
             </Badge>
-
             <div>
-              <h1 className="max-w-2xl font-serif font-medium leading-[1.04] text-ink-900">
-                Site data for any domain,{' '}
-                <span className="text-gradient">structured as JSON.</span>
+              <h1 className="max-w-4xl font-serif font-medium leading-[1.02] text-ink-900">
+                Compare websites with a <span className="text-gradient">research-grade workflow</span>.
               </h1>
-              <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-600">
-                Enter any URL and get back traffic estimates, SEO signals, technology fingerprints,
-                DNS infrastructure, business classification, and AI trust scoring — all in one structured response.
+              <p className="mt-5 max-w-2xl text-lg leading-relaxed text-ink-600">
+                Inspect any website with estimated traffic, detected SEO structure, technology signals, business context, and trust scoring. Start with a live report now, then move into directories, comparisons, and API workflows when you need more coverage.
               </p>
             </div>
 
-            {/* Signal pills */}
-            <div className="flex flex-wrap gap-2">
-              {signalPills.map((pill) => {
-                const Icon = pill.icon;
-                return (
-                  <span
-                    key={pill.label}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-ink-200 bg-white/70 px-3 py-1.5 text-xs font-semibold text-ink-700"
-                  >
-                    <Icon size={13} className="text-clay-500" />
-                    {pill.label}
-                  </span>
-                );
-              })}
-            </div>
-
-            {/* Search form */}
             <form onSubmit={handleAnalyze} className="max-w-xl">
-              <label htmlFor="hero-domain" className="sr-only">Look up a domain</label>
+              <label htmlFor="hero-domain" className="sr-only">Analyze a domain</label>
               <div className="relative rounded-[1.5rem] border border-white/70 bg-white/85 p-2 shadow-xl shadow-clay-100/60 backdrop-blur">
                 <div className="pointer-events-none absolute left-6 top-1/2 -translate-y-1/2 text-ink-400">
                   <Search size={20} />
@@ -145,27 +112,26 @@ export const HeroSection: React.FC = () => {
                   aria-invalid={error ? 'true' : 'false'}
                   aria-describedby="hero-domain-help hero-domain-error"
                   placeholder={`Try ${demoDomain}`}
-                  className="block w-full rounded-[1.1rem] bg-transparent py-4 pl-12 pr-36 text-lg font-medium text-ink-900 outline-none placeholder:text-ink-400"
+                  className="block w-full rounded-[1.1rem] bg-transparent py-4 pl-12 pr-32 text-lg font-medium text-ink-900 outline-none placeholder:text-ink-400"
                 />
                 <div className="absolute inset-y-2 right-2">
                   <Button type="submit" variant="clay" className="h-full rounded-xl px-6 font-semibold" shimmer>
-                    Look up site
+                    Analyze website
                   </Button>
                 </div>
               </div>
               <p id="hero-domain-help" className="mt-3 text-sm text-ink-500">
-                One free live report, no sign-in required. Unlock {FREE_STARTER_CREDITS} API requests at {FREE_RATE_LIMIT_RPM} req/min when you sign in with GitHub.
+                Start with one live report now, then unlock {FREE_STARTER_CREDITS} starter requests and {FREE_RATE_LIMIT_RPM} req/min when you want to operationalize the workflow in the API.
               </p>
-              {error && (
-                <p id="hero-domain-error" className="mt-2 text-sm text-rose-600">{error}</p>
-              )}
+              <p id="hero-domain-error" className={`mt-2 text-sm ${error ? 'text-rose-600' : 'text-transparent'}`}>
+                {error || 'Valid domain format required'}
+              </p>
             </form>
 
-            {/* CTAs */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
               <Link href="/directory">
                 <Button size="lg" variant="clay" glow>
-                  Browse site directory
+                  Browse markets first
                   <ArrowRight size={18} />
                 </Button>
               </Link>
@@ -174,8 +140,25 @@ export const HeroSection: React.FC = () => {
               </Link>
             </div>
 
-            {/* Quick links */}
-            <div className="flex flex-wrap gap-2">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-ink-700">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Best first step</p>
+                <p className="mt-1 font-semibold text-ink-900">Open one live report</p>
+                <p className="mt-1 text-ink-600">Validate the signal quality before you commit to the API.</p>
+              </div>
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-ink-700">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Best buyer path</p>
+                <p className="mt-1 font-semibold text-ink-900">Browse adjacent competitors</p>
+                <p className="mt-1 text-ink-600">Use category, topic, and technology hubs to build a shortlist quickly.</p>
+              </div>
+              <div className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm text-ink-700">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-500">Best API proof</p>
+                <p className="mt-1 font-semibold text-ink-900">Reuse the same workflow</p>
+                <p className="mt-1 text-ink-600">The report, compare, and directory views map directly to structured JSON outputs.</p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3">
               {quickLinks.map((item) => (
                 <Link
                   key={item.href}
@@ -188,38 +171,35 @@ export const HeroSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Right column — data preview */}
-          <div className="flex flex-col gap-4">
-            {/* Mini stat grid */}
-            <div className="grid grid-cols-4 gap-2">
-              {dataPoints.map((dp) => (
-                <div key={dp.label} className="rounded-2xl border border-white/70 bg-white/80 px-3 py-3 text-center shadow-sm">
-                  <p className="font-mono text-xl font-bold text-ink-900">{dp.value}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-500">{dp.sub}</p>
-                </div>
-              ))}
+          <div className="rounded-[2rem] border border-white/60 bg-white/80 p-4 shadow-2xl shadow-clay-100/70 backdrop-blur">
+            <div className="grid gap-3 sm:grid-cols-3">
+              {heroSignals.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <Icon size={18} className="text-clay-600" />
+                    <p className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">{item.label}</p>
+                    <p className="mt-2 text-sm font-medium leading-6 text-slate-700">{item.value}</p>
+                  </div>
+                );
+              })}
             </div>
-
-            {/* JSON preview panel */}
-            <div className="rounded-[2rem] border border-white/60 bg-white/80 p-4 shadow-2xl shadow-clay-100/70 backdrop-blur">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="mt-4 rounded-[1.6rem] border border-slate-200 bg-slate-950 p-4 text-white shadow-inner">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-500">Structured site data</p>
-                  <p className="mt-0.5 text-sm font-medium text-ink-800">JSON response preview</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Live report preview</p>
+                  <p className="mt-1 text-sm text-slate-200">See how the same dataset turns into a conversion-ready analyst workflow.</p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-ink-200 bg-ink-50 px-3 py-1.5 text-xs font-semibold text-ink-700">
-                  <Layers size={13} />
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-slate-200">
+                  <Layers3 size={14} />
                   {displayDomain}
                 </div>
               </div>
-              <div className="rounded-[1.4rem] border border-slate-200 bg-slate-950 p-4 text-white shadow-inner">
-                <div className="min-h-[340px]">
-                  {shouldRenderCodeViewer ? <DeferredCodeViewer domain={displayDomain} /> : <CodeViewerFallback />}
-                </div>
+              <div className="min-h-[360px]">
+                {shouldRenderCodeViewer ? <DeferredCodeViewer domain={displayDomain} /> : <CodeViewerFallback />}
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>

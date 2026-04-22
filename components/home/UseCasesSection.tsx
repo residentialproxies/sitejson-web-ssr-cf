@@ -1,85 +1,44 @@
 import React from 'react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { ArrowRight, ChartBar as BarChart2, Search, Layers, Database } from 'lucide-react';
+import { ArrowRight, Binoculars, Code2, Filter } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { USE_CASE_CARDS } from '@/lib/pseo';
 
-const useCases = [
-  {
-    icon: Search,
-    eyebrow: 'Lead qualification',
-    title: 'Qualify prospects with site data',
-    description:
-      'Look up any domain to verify traffic scale, tech stack, business category, and trust score before your team spends time on outreach. Filter out low-quality leads with evidence.',
-    cta: 'Try a live report',
-    href: '/data/openai.com',
-    color: 'bg-clay-100 text-clay-600',
-  },
-  {
-    icon: BarChart2,
-    eyebrow: 'Competitive research',
-    title: 'Map a market in minutes',
-    description:
-      'Start from a category or technology directory, open live reports, compare traffic estimates, SEO structure, and tech signals across competitors — all in one workflow.',
-    cta: 'Browse directory',
-    href: '/directory',
-    color: 'bg-sage-100 text-sage-600',
-  },
-  {
-    icon: Layers,
-    eyebrow: 'Tech stack intelligence',
-    title: 'Discover what sites run on',
-    description:
-      'Detect frameworks, CDN, analytics, payments, CMS, and 500+ other technology signatures. Browse sites grouped by shared tech to find clusters, vendors, and buyers.',
-    cta: 'Explore tech stacks',
-    href: '/directory/technology',
-    color: 'bg-ochre-100 text-ochre-600',
-  },
-  {
-    icon: Database,
-    eyebrow: 'API enrichment',
-    title: 'Enrich your product with site data',
-    description:
-      'Pull structured JSON from the API and enrich your CRM, data pipeline, or product. The same fields you see in the visual report are available as clean, typed API responses.',
-    cta: 'View API access',
-    href: '/#pricing',
-    color: 'bg-ink-100 text-ink-600',
-  },
-] as const;
+const icons = [Binoculars, Filter, Code2];
 
 export function UseCasesSection() {
   return (
     <section className="bg-white py-20">
       <div className="container mx-auto max-w-7xl px-4 md:px-6">
-        <div className="max-w-2xl mb-12">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-clay-600">Who uses SiteJSON</p>
+        <div className="max-w-3xl">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-clay-600">User-friendly flows</p>
           <h2 className="mt-3 text-3xl font-semibold text-slate-900 md:text-4xl">
-            Site data for every workflow.
+            Every major page now points to the next useful action.
           </h2>
           <p className="mt-4 text-lg leading-relaxed text-slate-600">
-            From single-domain lookups to bulk API enrichment — SiteJSON fits naturally into research, sales, SEO, and developer workflows.
+            Instead of dead-end pages, the experience should help people investigate, qualify, and only then decide
+            whether they need the API.
           </p>
         </div>
-        <div className="grid gap-5 lg:grid-cols-4 md:grid-cols-2">
-          {useCases.map((item) => {
-            const Icon = item.icon;
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {USE_CASE_CARDS.map((item, index) => {
+            const Icon = icons[index];
             return (
-              <div
-                key={item.title}
-                className="flex flex-col rounded-3xl border border-slate-200 bg-slate-50/70 p-6 transition hover:border-clay-200 hover:shadow-md"
-              >
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl mb-4 ${item.color}`}>
-                  <Icon size={20} />
-                </div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-clay-600 mb-2">{item.eyebrow}</p>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">{item.title}</h3>
-                <p className="text-sm leading-relaxed text-slate-600 flex-1">{item.description}</p>
-                <Link
-                  href={item.href as Route}
-                  className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-clay-700 hover:text-clay-800 transition"
-                >
-                  {item.cta} <ArrowRight size={15} />
-                </Link>
-              </div>
+              <Card key={item.title} className="h-full border-slate-200 bg-slate-50/70">
+                <CardHeader>
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sage-100 text-sage-700">
+                    <Icon size={22} />
+                  </div>
+                  <CardTitle>{item.title}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link href={item.href as Route} className="inline-flex items-center gap-2 text-sm font-semibold text-sage-700 hover:text-sage-800">
+                    {item.cta} <ArrowRight size={16} />
+                  </Link>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
