@@ -23,7 +23,7 @@ export function ExecutiveSummary({ domain, report }: ExecutiveSummaryProps) {
           <ul className="mt-3 space-y-3 text-sm leading-relaxed text-slate-600">
             {content.bullets.map((bullet) => (
               <li key={bullet} className="flex gap-3">
-                <span className="mt-1 h-2 w-2 rounded-full bg-clay-500" />
+                <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-clay-500" aria-hidden="true" />
                 <span>{bullet}</span>
               </li>
             ))}

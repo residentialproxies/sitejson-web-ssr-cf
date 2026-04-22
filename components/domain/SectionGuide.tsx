@@ -20,7 +20,7 @@ export function SectionGuide({ section }: SectionGuideProps) {
         <ul className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-600">
           {content.bullets.map((bullet) => (
             <li key={bullet} className="flex gap-3">
-              <span className="mt-1 h-2 w-2 rounded-full bg-sage-500" />
+              <span className="mt-1 h-2 w-2 flex-shrink-0 rounded-full bg-sage-500" aria-hidden="true" />
               <span>{bullet}</span>
             </li>
           ))}
