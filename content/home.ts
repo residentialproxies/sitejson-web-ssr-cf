@@ -1,131 +1,123 @@
 import { FREE_STARTER_CREDITS, FREE_RATE_LIMIT_RPM, PRO_MONTHLY_QUOTA, PRO_RATE_LIMIT_RPM } from '@/lib/auth/session';
 
 export const homeContent = {
-  headline: 'Production-grade website intelligence API',
+  headline: 'Structured site data for any domain',
   subheadline:
-    'Analyze any domain with structured SEO, infrastructure, and trust signals. Built for API-first products and search-scale content.',
+    'Look up any website and get traffic, SEO, tech stack, trust score, and business data back as structured JSON.',
   bullets: [
-    'Modular provider architecture',
-    'SSR-ready pages with SEO metadata',
-    'Queue-driven analysis pipeline',
-    'Full observability and deployment runbooks',
+    'Traffic estimates, rankings, and engagement metrics',
+    'Full technology stack detection across 500+ signatures',
+    'SEO structure analysis with heading maps and link counts',
+    'AI-powered trust scoring and business classification',
   ],
-  // SEO-optimized long-form content (1200+ words equivalent)
   seo: {
-    title: 'SiteJSON - Website Intelligence API for Traffic, SEO & Tech Stack Analysis',
+    title: 'SiteJSON - Site Data API for Traffic, SEO & Tech Stack Analysis',
     description:
-      'SiteJSON provides comprehensive website intelligence through a powerful REST API. Get traffic estimates, SEO scores, technology stack detection, and AI-powered trust analysis for any domain.',
+      'SiteJSON provides structured site data through a REST API. Get traffic estimates, SEO metrics, technology stack detection, and AI-powered trust analysis for any domain.',
     keywords: [
-      'website intelligence API',
-      'domain analysis',
+      'site data API',
+      'domain data',
       'SEO analysis tool',
       'traffic estimation',
       'tech stack detection',
-      'website scanner',
-      'competitor analysis',
-      'domain intelligence',
-      'website monitoring',
-      'digital footprint analysis',
+      'website data lookup',
+      'competitor data',
+      'domain data API',
+      'structured site data',
+      'website technology detection',
     ],
   },
-  // Main sections for expanded content
   sections: {
     hero: {
-      title: 'Website Intelligence, Structured Data',
+      title: 'Structured Site Data for Any Domain',
       description:
-        'Unlock comprehensive insights about any website with our powerful API. From traffic analytics to technology detection, SiteJSON delivers the data you need to make informed decisions.',
+        'Enter a URL and get back traffic estimates, SEO metrics, technology detection, DNS details, business classification, and a trust score — all as structured JSON.',
     },
     features: {
-      title: 'Complete Website Intelligence Platform',
+      title: 'Complete Site Data Platform',
       description:
-        'Our platform aggregates data from 50+ sources to provide you with accurate, real-time insights about any domain on the internet.',
+        'SiteJSON aggregates data from multiple sources to build a structured profile for any domain on the internet.',
     },
     useCases: {
-      title: 'Built for Modern Data-Driven Teams',
+      title: 'Site Data for Every Workflow',
       description:
-        'Whether you are qualifying leads, preventing fraud, or analyzing competitors, SiteJSON provides the intelligence you need at scale.',
+        'Whether you are qualifying leads, analyzing competitors, or enriching a CRM — SiteJSON delivers the domain data you need to make faster decisions.',
     },
   },
-  // FAQ section for structured data
   faqs: [
     {
-      question: 'What is SiteJSON and how does it work?',
+      question: 'What is SiteJSON and what data does it provide?',
       answer:
-        'SiteJSON is a comprehensive website intelligence API that analyzes any domain and provides structured data including traffic estimates, SEO metrics, technology stack detection, DNS infrastructure details, and AI-powered trust scoring. Our system crawls websites, aggregates data from multiple sources, and delivers insights through a simple REST API with sub-200ms response times.',
+        'SiteJSON is a site data platform that turns any domain into a structured data profile. Enter a URL and get back traffic estimates, SEO metrics, technology stack detection, DNS infrastructure details, AI-powered business classification, and a trust score — all as JSON.',
     },
     {
-      question: 'What data points does SiteJSON provide?',
+      question: 'What data points are included in a site data profile?',
       answer:
-        'SiteJSON provides over 50 data points per domain including: monthly traffic estimates and sources, global and country rankings, SEO scores and technical audits, technology stack detection (CMS, frameworks, analytics), DNS and infrastructure details, AI-generated business classification, trust and legitimacy scores, advertising and monetization data, visual screenshots and brand analysis, and contact information extraction.',
+        'Each profile includes: monthly traffic estimates and sources, global and country rankings, SEO structure analysis (headings, links, meta tags), technology stack detection across 500+ frameworks and tools, DNS and infrastructure details, AI-generated business classification, trust and legitimacy scores, and contact information extraction.',
     },
     {
       question: 'How accurate are the traffic estimates?',
       answer:
-        'Our traffic estimates combine multiple data sources including Cloudflare Radar, DNS analytics, and proprietary algorithms to provide highly accurate traffic intelligence. While no third-party estimate is perfect, our multi-source approach typically achieves 85-95% accuracy when compared to verified analytics data.',
+        'Traffic estimates combine multiple data sources including ranking databases, DNS analytics, and estimation models. The multi-source approach improves accuracy compared to single-source tools, though no third-party estimate is perfect.',
     },
     {
-      question: 'Can I use SiteJSON for lead qualification?',
+      question: 'Can I use SiteJSON data for lead qualification?',
       answer:
-        'Absolutely. SiteJSON is widely used for automated lead qualification by analyzing company domains in real-time. Filter out spam signups, prioritize high-traffic prospects, detect fraudulent domains, and enrich lead data with company intelligence including technology choices and business categorization.',
+        'Yes. Look up any prospect domain to see traffic scale, technology stack, business category, and trust score. Use the data to filter out low-quality leads and prioritize outreach based on evidence rather than guesswork.',
     },
     {
-      question: 'What is the API response time?',
+      question: 'How fast is the API?',
       answer:
-        'SiteJSON delivers sub-200ms API responses for cached data. For new domains not yet in our database, initial analysis typically completes within 30-60 seconds. Our edge-cached architecture ensures popular domains are always available instantly.',
+        'Cached data returns in under 200ms. For domains not yet in the database, initial analysis typically completes within 30-60 seconds. Popular domains are always available instantly.',
     },
     {
       question: 'How does the trust scoring work?',
       answer:
-        'Our AI-powered trust scoring analyzes multiple signals including domain age, content quality, contact information presence, SSL configuration, DNS reputation, and behavioral patterns. The system assigns a 0-100 legitimacy score and flags potential spam, phishing, or fraudulent domains.',
+        'The AI trust model analyzes domain age, content quality, contact information, SSL configuration, DNS reputation, and behavioral patterns. It assigns a 0-100 legitimacy score and flags potential risks.',
     },
     {
-      question: 'Is there a free tier available?',
+      question: 'Is there a free tier?',
       answer:
-        `SiteJSON API access requires a key. Sign in with GitHub to receive ${FREE_STARTER_CREDITS} one-time starter requests, a signed API key, and ${FREE_RATE_LIMIT_RPM} req/min. Pro adds ${PRO_MONTHLY_QUOTA} requests per billing cycle at ${PRO_RATE_LIMIT_RPM} req/min and is manually activated until checkout ships.`,
+        `Sign in with GitHub to receive ${FREE_STARTER_CREDITS} one-time starter requests, a signed API key, and a rate limit of ${FREE_RATE_LIMIT_RPM} req/min. Pro adds ${PRO_MONTHLY_QUOTA} requests per billing cycle at ${PRO_RATE_LIMIT_RPM} req/min.`,
     },
     {
-      question: 'What programming languages are supported?',
+      question: 'What programming languages work with the API?',
       answer:
-        'SiteJSON is a REST API that works with any programming language. We provide code examples for JavaScript/TypeScript, Python, Go, Rust, PHP, Ruby, and more. Our API returns JSON responses that are easy to parse in any environment.',
+        'SiteJSON is a REST API that returns JSON. It works with any language — JavaScript, Python, Go, Rust, PHP, Ruby, and more. The same data you see on the site is available through the API.',
     },
   ],
-  // Long-form content sections for SEO
   longForm: {
     introduction: `
-      In today's digital landscape, understanding the websites you interact with is crucial for business success.
-      Whether you are a marketer analyzing competitors, a sales team qualifying leads, a security professional
-      detecting fraud, or a developer building data-rich applications, having access to comprehensive website
-      intelligence can give you a significant competitive advantage.
+      Understanding the websites you interact with is essential for business decisions.
+      Whether you are qualifying leads, analyzing competitors, detecting fraud, or building
+      data-rich applications, having access to structured site data gives you a significant advantage.
     `,
     whatWeDo: `
-      SiteJSON is the most comprehensive website intelligence platform available today. Our API analyzes millions
-      of domains, extracting valuable data points that help businesses make informed decisions. From traffic
-      analytics that reveal a website's popularity to technology detection that shows what powers their
-      infrastructure, we provide the insights that matter.
+      SiteJSON is a site data platform that analyzes any domain and returns a structured data profile.
+      From traffic estimates that reveal a website's scale to technology detection that shows what
+      powers their infrastructure, SiteJSON provides the data points that matter — all in one place.
     `,
     technology: `
-      Our platform leverages advanced machine learning algorithms and a distributed crawling infrastructure
-      to deliver accurate, real-time data. We combine multiple data sources including DNS records, HTML analysis,
-      traffic patterns, and AI classification to build complete website profiles. Our system processes over
-      1 million domains, making it one of the largest website intelligence databases available.
+      The platform combines multiple data sources including DNS records, HTML analysis, traffic
+      estimation models, technology fingerprinting against 500+ known signatures, and AI classification
+      models. The result is a single, consistent JSON object per domain that you can browse on the
+      site or pull through the REST API.
     `,
     useCases: `
-      Lead qualification teams use SiteJSON to automatically score and prioritize prospects based on their
-      web presence. Security teams leverage our trust scoring to detect phishing attempts and fraudulent domains.
-      Marketing teams analyze competitor technology choices and traffic sources. Product teams enrich their
-      applications with rich domain metadata. The possibilities are endless.
+      Growth teams use site data to qualify leads by checking traffic, tech stack, and business category.
+      SEO teams compare domain data against competitors to find gaps. Security teams check trust scores
+      to flag risky domains. Developers pull structured data through the API to enrich their own products.
     `,
     whyChooseUs: `
-      Unlike simple domain lookup tools, SiteJSON provides deep intelligence across multiple dimensions.
-      Our traffic estimates are derived from multiple sources for maximum accuracy. Our technology detection
-      identifies over 500 different technologies. Our AI classification automatically categorizes websites
-      using IAB taxonomy. And our trust scoring helps you avoid risky domains before they become a problem.
+      Unlike simple domain lookup tools, SiteJSON combines depth with structure. Traffic estimates
+      come from multiple sources. Technology detection covers 500+ signatures. AI classification
+      uses IAB taxonomy. Trust scoring evaluates legitimacy across multiple signals. And every
+      data point is available as structured JSON through the API.
     `,
     gettingStarted: `
-      Getting started with SiteJSON is simple. Sign in with GitHub to receive your free API key, make your
-      first request to our /api/v1/analyze endpoint, and start receiving comprehensive website intelligence in
-      seconds. Our documentation includes code examples in multiple languages, and our support team is always
-      ready to help.
+      Sign in with GitHub to get your API key and start pulling structured site data. Browse the
+      directory to explore data for thousands of domains, or enter any URL to generate a fresh
+      data profile on demand.
     `,
   },
 };
